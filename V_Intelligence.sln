@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C# Express 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V_Intelligence", "V_Intelligence\V_Intelligence.csproj", "{9F06757B-1982-48F8-843A-646A2928744E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V_DataStruk", "..\V_DataStruk\V_DataStruk\V_DataStruk.csproj", "{C2C84BBA-4CBD-4DA1-9E1E-F9C964196206}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V_Mathematics", "..\V_Mathematics\V_Mathematics\V_Mathematics.csproj", "{05D49FA0-CBF3-40D6-B92C-F2D71A0EB587}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9F06757B-1982-48F8-843A-646A2928744E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F06757B-1982-48F8-843A-646A2928744E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F06757B-1982-48F8-843A-646A2928744E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F06757B-1982-48F8-843A-646A2928744E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2C84BBA-4CBD-4DA1-9E1E-F9C964196206}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2C84BBA-4CBD-4DA1-9E1E-F9C964196206}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2C84BBA-4CBD-4DA1-9E1E-F9C964196206}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2C84BBA-4CBD-4DA1-9E1E-F9C964196206}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05D49FA0-CBF3-40D6-B92C-F2D71A0EB587}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05D49FA0-CBF3-40D6-B92C-F2D71A0EB587}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05D49FA0-CBF3-40D6-B92C-F2D71A0EB587}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05D49FA0-CBF3-40D6-B92C-F2D71A0EB587}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
