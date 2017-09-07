@@ -29,8 +29,11 @@ namespace Vulpine.Core.AI.Nural
 {
     public sealed class Nuron : IComparable<Nuron>
     {
-        //stores the ID number for the nuron
-        private int node;
+        //stores the index of the nuron
+        private int index;
+
+        //indicates the level containing this node
+        private int level;
 
         //used in propergating the network
         private double value;
@@ -45,11 +48,12 @@ namespace Vulpine.Core.AI.Nural
         private NetworkCPP network;
 
 
-        internal Nuron(NetworkCPP network, ActFunc func, int node)
+        internal Nuron(NetworkCPP network, ActFunc func, int level, int index)
         {
             this.network = network;
             this.func = func;
-            this.node = node;
+            this.level = level;
+            this.index = index;
 
             inputs = new VListArray<Int32>();
             value = 0.0;
@@ -70,7 +74,7 @@ namespace Vulpine.Core.AI.Nural
 
             //copies the other vlaues
             func = other.func;
-            node = other.node;
+            level = other.level;
             value = other.value;
 
             //makes a deep copy of the list of inputs
@@ -80,14 +84,19 @@ namespace Vulpine.Core.AI.Nural
         public int CompareTo(Nuron other)
         {
             //compares the indices of the nodes
-            return node.CompareTo(other.node);
+            return level.CompareTo(other.level);
         }
 
 
 
-        public int ID
+        public int Level
         {
-            get { return node; }
+            get { return level; }
+        }
+
+        public int Index
+        {
+            get { return index; }
         }
 
         public double Value
@@ -122,6 +131,24 @@ namespace Vulpine.Core.AI.Nural
         }
 
 
+        //public bool IsConnected(Nuron other)
+        //{
+        //    if (other.Level > this.Level)
+        //    {
+        //        //swaps the nodes if given out of order
+        //        return other.IsConnected(this);
+        //    }
+
+        //    foreach (int index in inputs)
+        //    {
+        //        Axon ax = network.GetAxonByID(index);
+        //        if (ax == null) continue;
+
+        //        Nuron node = network.GetNuronByID(ax.Input);
+        //    }
+        //}
+
+
 
 
         internal IEnumerable<Int32> ListInputs()
@@ -133,13 +160,19 @@ namespace Vulpine.Core.AI.Nural
         internal void AddInput(Axon input)
         {
             //adds the inovation number to our list
-            inputs.Add(input.InvNo);
+            inputs.Add(input.Index);
         }
 
-
+        /// <summary>
+        /// Obtains the axon that links this nuron with another given nuron, 
+        /// if no sutch axon exists it returns null. The order in which the 
+        /// nurons are given dose not matter.
+        /// </summary>
+        /// <param name="other">Another nuron</param>
+        /// <returns>The axon conecting the nurons</returns>
         internal Axon GetAxon(Nuron other)
         {
-            if (other.node > this.node)
+            if (other.level > this.level)
             {
                 //makes shure the nodes are in the right order
                 return other.GetAxon(this);
@@ -147,13 +180,19 @@ namespace Vulpine.Core.AI.Nural
 
             foreach (int invno in inputs)
             {
-
                 Axon ax = network.GetAxonByID(invno);
-                if (ax != null && ax.Input == other.ID) return ax;
+                if (ax == null) continue;
+
+                //determins if we find a match
+                if (ax.Input == other.Index) return ax;
             }
 
+            //we faild to find the axon
             return null;
 
         }
+
+
+        
     }
 }

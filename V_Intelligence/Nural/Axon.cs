@@ -26,19 +26,19 @@ namespace Vulpine.Core.AI.Nural
 {
     public sealed class Axon
     {
-        //refers to the input nuron
+        //stores the index of the axon
+        int index;
+
+        //stores the index of the input nuron
         int input;
 
         //determins the weight of the conneciton
         double weight;
-        bool enabled;                                                                                                                                                                                                                                                                                                                   
+        bool enabled;   
 
-        //uniquly identifies this axon between generations 
-        int invno;
-
-        internal Axon(int invno, int input, double weight)
+        internal Axon(int index, int input, double weight)
         {
-            this.invno = invno;
+            this.index = index;
             this.input = input;
             this.weight = weight;
             this.enabled = true;
@@ -46,7 +46,7 @@ namespace Vulpine.Core.AI.Nural
 
         internal Axon(Axon other)
         {
-            invno = other.invno;
+            index = other.index;
             input = other.input;
             weight = other.weight;
             enabled = other.enabled;
@@ -56,7 +56,7 @@ namespace Vulpine.Core.AI.Nural
         {
             StringBuilder sb = new StringBuilder();
 
-            sb.AppendFormat("Axon-{0:X32} ", invno);
+            sb.AppendFormat("Axon-{0:X32} ", index);
             sb.AppendFormat("{0:G6} ", weight);
             sb.Append(enabled ? "Enabled" : "Disabled");
 
@@ -70,18 +70,18 @@ namespace Vulpine.Core.AI.Nural
             if (other == null) return false;
 
             //compares the inovation numbers
-            return (other.invno == invno);
+            return (other.index == index);
         }
 
         public override int GetHashCode()
         {
             //uses the inovation number as a hashcode
-            return invno;
+            return index;
         }
 
-        public int InvNo
+        public int Index
         {
-            get { return invno; }
+            get { return index; }
         }
 
         public int Input

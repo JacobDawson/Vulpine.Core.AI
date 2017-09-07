@@ -31,6 +31,25 @@ using Vulpine.Core.Calc.RandGen;
 
 namespace Vulpine.Core.AI.Nural
 {
+    /// <summary>
+    /// A Compositional Pattern Producing Network, or CPP Network, is a special type of
+    /// Nural Net used to generate repeating and concentric patterns. Typicaly the entire
+    /// spectrum of inputs is fed through the network to generate a hyper-dimentonal image,
+    /// although the structor can be used for genraral tasks as well. The structor of the
+    /// network consists of a directed acyclic graph (DAG) where each of the nurons can 
+    /// have it's own evaluation funciton. The exact functions used determin the types
+    /// of paterns the network can create. All CPPNs start mininaly and utilise nural
+    /// evolution in order to evolve the desired structor.
+    /// 
+    /// A Compositional Pattern Procduncing Network (CPPN) is a sepcial type of nural 
+    /// network typicaly used to generate hyper-dimentional image data, although they 
+    /// may also be used in-place of more traditional nural networks. Internaly, they
+    /// consist of a directed acyclic graph (DAG) of nurons and axons. Each nuron can
+    /// have its own activation function, which determins the types of patterns the 
+    /// network can produce. All CPPNs start with miminal structor and use the Nural 
+    /// Evolution of Augmenting Topoligies (NEAT) algorythim to evolve the structor
+    /// nessary to produce the desired patterns.
+    /// </summary>
     public sealed class NetworkCPP
     {
         //stores all the nurons in sorted order
@@ -38,6 +57,9 @@ namespace Vulpine.Core.AI.Nural
 
         //stores a table of axons by inovation number
         private Table<Int32, Axon> axons;
+
+
+        private Table<Int32, Nuron> nurons2;
 
 
         private NetworkCPP(NetworkCPP other)
@@ -55,9 +77,39 @@ namespace Vulpine.Core.AI.Nural
             foreach (Axon ax in other.axons.ListItems())
             {
                 Axon copy = new Axon(ax);
-                axons.Add(ax.InvNo, copy);
+                axons.Add(ax.Index, copy);
             }
         }
+
+
+        public void AddNuron(VRandom rng, ActFunc func, int level)
+        {
+            int index = rng.NextInt() & Int32.MaxValue;
+
+            while (nurons2.HasKey(index))
+            {
+                index = rng.NextInt() & Int32.MaxValue;
+            }
+
+            Nuron n = new Nuron(this, func, level, index);
+        }
+
+
+        private int GetIndex(VRandom rng)
+        {
+            int index = -1;
+
+            while (index < 0)
+            {
+                index = rng.NextInt() & Int32.MaxValue;
+                if (axons.HasKey(index)) index = -1;
+                if (nurons2.HasKey(index)) index = -1;
+            }
+
+            return index;
+        }
+
+
 
 
         public void AddAxon(Axon ax)
@@ -72,6 +124,11 @@ namespace Vulpine.Core.AI.Nural
         internal Axon GetAxonByID(int id)
         {
             return axons.GetValue(id);
+        }
+
+        internal Nuron GetNuronByID(int id)
+        {
+            return nurons2.GetValue(id);
         }
 
 
@@ -93,11 +150,11 @@ namespace Vulpine.Core.AI.Nural
 
             foreach (Axon ax in net1.ListItems())
             {
-                if (net2.HasKey(ax.InvNo))
+                if (net2.HasKey(ax.Index))
                 {
                     //computes the distance between the weights
                     double w1 = ax.Weight;
-                    double w2 = net2[ax.InvNo].Weight;
+                    double w2 = net2[ax.Index].Weight;
 
                     wbar += Math.Abs(w1 - w2);
                     match += 1;
@@ -112,7 +169,7 @@ namespace Vulpine.Core.AI.Nural
             foreach (Axon ax in net2.ListItems())
             {
                 //only counts the missing disjoint edges
-                if (!net1.HasKey(ax.InvNo)) disjoint += 1;
+                if (!net1.HasKey(ax.Index)) disjoint += 1;
             }
 
             //determins the size of the larger network
@@ -149,11 +206,11 @@ namespace Vulpine.Core.AI.Nural
             foreach (Axon ax in net2.ListItems())
             {
                 //we are only intrested in acvitve crossovers
-                if (!netC.HasKey(ax.InvNo)) continue;
+                if (!netC.HasKey(ax.Index)) continue;
                 if (!ax.Enabled) continue;
 
                 //obtains the child axon
-                Axon axc = netC.GetValue(ax.InvNo);
+                Axon axc = netC.GetValue(ax.Index);
 
                 if (axc.Enabled)
                 {
@@ -200,10 +257,10 @@ namespace Vulpine.Core.AI.Nural
             Axon target = null;
 
             //abort if we happen to chose identical nodes
-            if (n1.ID == n2.ID) return;
+            if (n1.Level == n2.Level) return;
 
             //swaps the neurons if reversed
-            if (n1.ID < n2.ID)
+            if (n1.Level < n2.Level)
             {
                 var temp = n1;
                 n1 = n2;
@@ -213,7 +270,7 @@ namespace Vulpine.Core.AI.Nural
             //scans the input axons for a match
             foreach (Axon ax in n1.ListAxons())
             {
-                if (ax.Input == n2.ID)
+                if (ax.Input == n2.Level)
                 {
                     target = ax;
                     break;
@@ -232,19 +289,19 @@ namespace Vulpine.Core.AI.Nural
                 if (axons.HasKey(invno)) return;
 
                 //adds the values to our data-structor
-                target = new Axon(invno, n2.ID, weight);
+                target = new Axon(invno, n2.Level, weight);
                 n1.AddInput(target);
                 axons.Add(invno, target);
             }
-            else if (n1.ID - n2.ID > 4)
+            else if (n1.Level - n2.Level > 4)
             {
                 //disables the target edge
                 target.Enabled = false;
 
-                int level = rng.RandInt(n2.ID + 1, n1.ID);
+                int level = rng.RandInt(n2.Level + 1, n1.Level);
                 ActFunc func = GenFunc(rng);
-                Nuron n = new Nuron(this, func, level);
-                nurons.Add(n);
+                //Nuron n = new Nuron(this, func, level);
+                //nurons.Add(n);
 
 
             }
@@ -252,6 +309,45 @@ namespace Vulpine.Core.AI.Nural
 
 
             //return null;
+        }
+
+
+
+        public void Expand2(VRandom rng)
+        {
+            Nuron n1, n2;
+
+            RandPair(rng, out n1, out n2);
+            Axon target = n2.GetAxon(n1);
+
+            if (target == null)
+            {
+                //creates a new axon betwen the neurons
+                int index = rng.NextInt() & Int32.MaxValue;
+                double weight = rng.RandGauss(0.0, 1.0);
+
+                //we drop the axon in case of collision
+                if (axons.HasKey(index)) return;
+
+                //adds the values to our data-structor
+                target = new Axon(index, n1.Index, weight);
+                n2.AddInput(target);
+                axons.Add(index, target);
+            }
+            else
+            {
+                //disables the target edge
+                target.Enabled = false;
+
+                //creates a new node
+                int index = rng.NextInt() & Int32.MaxValue;
+                int level = (n2.Level + n1.Level) / 2;
+                ActFunc func = GenFunc(rng);
+
+                //we drop the node in case of collision
+                if (nurons2.HasKey(index)) return;
+            }
+            
         }
 
 
@@ -272,39 +368,61 @@ namespace Vulpine.Core.AI.Nural
 
 
 
-
-
-
-        //private Axon GetConnection(Nuron n1, Nuron n2)
-        //{
-        //    if (n1.ID > n2.ID)
-        //    {
-        //        return GetConnection(n2, n1);
-        //    }
-
-
-        //    foreach (int id in n1.ListInputs())
-        //    {
-        //        Axon ax = axons.GetValue(id);
-        //        if (ax != null && ax.Input == n2.ID) return ax;
-        //    }
-
-        //    return null;         
-        //}
-
         private Axon GetConnection(Nuron n1, Nuron n2)
         {
             //makes shure we scan the latter node
-            if (n1.ID < n2.ID) return GetConnection(n2, n1);
+            if (n1.Level < n2.Level) return GetConnection(n2, n1);
 
             //scans the input axons for a match
             foreach (Axon ax in n1.ListAxons())
-                if (ax.Input == n2.ID) return ax;
+                if (ax.Input == n2.Level) return ax;
 
             //we failed to find a match
             return null;
         }
 
+
+        /// <summary>
+        /// Helper method: selects a single nuron from the network at random.
+        /// </summary>
+        /// <param name="rng">An RNG to select the nuron</param>
+        /// <returns>A randomly selected nuron</returns>
+        private Nuron RandNuron(VRandom rng)
+        {
+            //generates a random nuron in O(n)
+            int index = rng.RandInt(nurons2.Count);
+            return nurons2.ElementAt(index).Item;
+        }
+
+        /// <summary>
+        /// Helper mehtod: selects a pair of nurons at random from diffrent 
+        /// levels of the network. The nurons are always listed in order.
+        /// </summary>
+        /// <param name="rng">An RNG to select the nurons</param>
+        /// <param name="n1">The lower level nuron</param>
+        /// <param name="n2">The upper level nuron</param>
+        private void RandPair(VRandom rng, out Nuron n1, out Nuron n2)
+        {
+            //generates two random nurons
+            n1 = RandNuron(rng);
+            n2 = RandNuron(rng);
+
+            //keeps searching while the nurons are on the same level
+            while (n1.Level == n2.Level)
+            {
+                Nuron n3 = RandNuron(rng);
+                n1 = n2;
+                n2 = n3;
+            }
+
+            //swaps the nurons if they are out of order
+            if (n1.Level > n2.Level)
+            {
+                Nuron n3 = n1;
+                n1 = n2;
+                n2 = n3;
+            }
+        }
 
 
 
