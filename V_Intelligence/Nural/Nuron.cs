@@ -131,26 +131,6 @@ namespace Vulpine.Core.AI.Nural
         }
 
 
-        //public bool IsConnected(Nuron other)
-        //{
-        //    if (other.Level > this.Level)
-        //    {
-        //        //swaps the nodes if given out of order
-        //        return other.IsConnected(this);
-        //    }
-
-        //    foreach (int index in inputs)
-        //    {
-        //        Axon ax = network.GetAxonByID(index);
-        //        if (ax == null) continue;
-
-        //        Nuron node = network.GetNuronByID(ax.Input);
-        //    }
-        //}
-
-
-
-
         internal IEnumerable<Int32> ListInputs()
         {
             //loops over the list of edge numbers
@@ -190,6 +170,24 @@ namespace Vulpine.Core.AI.Nural
             //we faild to find the axon
             return null;
 
+        }
+
+
+
+        internal bool AddAxon(Nuron target, double weight)
+        {
+            //enshures the nurons belong to the same network
+            if (network != target.network)
+            throw new InvalidOperationException();
+
+            int index = -1; // network.RandIndex();
+            if (index < 0) return false;
+
+            Axon ax = new Axon(index, target.Index, weight);
+            inputs.Add(index);
+            //network.AddAxon(ax);            
+
+            return true;
         }
 
 
