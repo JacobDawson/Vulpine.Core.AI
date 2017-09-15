@@ -137,11 +137,17 @@ namespace Vulpine.Core.AI.Nural
             return inputs.AsEnumerable();
         }
 
+
+
+        //THIS METHOD IS CRITICAL !!!
         internal void AddInput(Axon input)
         {
             //adds the inovation number to our list
             inputs.Add(input.Index);
         }
+
+
+
 
         /// <summary>
         /// Obtains the axon that links this nuron with another given nuron, 

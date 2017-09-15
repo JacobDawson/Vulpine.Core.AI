@@ -32,15 +32,6 @@ using Vulpine.Core.Calc.RandGen;
 namespace Vulpine.Core.AI.Nural
 {
     /// <summary>
-    /// A Compositional Pattern Producing Network, or CPP Network, is a special type of
-    /// Nural Net used to generate repeating and concentric patterns. Typicaly the entire
-    /// spectrum of inputs is fed through the network to generate a hyper-dimentonal image,
-    /// although the structor can be used for genraral tasks as well. The structor of the
-    /// network consists of a directed acyclic graph (DAG) where each of the nurons can 
-    /// have it's own evaluation funciton. The exact functions used determin the types
-    /// of paterns the network can create. All CPPNs start mininaly and utilise nural
-    /// evolution in order to evolve the desired structor.
-    /// 
     /// A Compositional Pattern Procduncing Network (CPPN) is a sepcial type of nural 
     /// network typicaly used to generate hyper-dimentional image data, although they 
     /// may also be used in-place of more traditional nural networks. Internaly, they
@@ -95,13 +86,12 @@ namespace Vulpine.Core.AI.Nural
 
         /// <summary>
         /// Adds a nuron to the network at the given level and with the given 
-        /// activation function. It returns true if the nuron was sucesfully 
-        /// added to the network.
+        /// activation function. It returns null if it was unable to add the nuron.
         /// </summary>
         /// <param name="func">Activation function of the nuron</param>
         /// <param name="level">Level of the nuron</param>
-        /// <returns>True on success</returns>
-        public bool AddNuron(ActFunc func, int level)
+        /// <returns>The inserted nuron</returns>
+        public Nuron AddNuron(ActFunc func, int level)
         {
             //clamps the level to be within range
             if (level > MAX_LV) level = MAX_LV;
@@ -109,21 +99,18 @@ namespace Vulpine.Core.AI.Nural
 
             //tries to generate a random index
             int index = RandIndex();
-            if (index < 0) return false;
+            if (index < 0) return null;
 
             //creates the node and adds it
             Nuron n = new Nuron(this, func, level, index);
             nurons.Add(index, n);
 
-            return true;
+            return n;
         }
 
 
         public bool AddAxon(Nuron source, Nuron target, double weight)
         {
-            //Note: confirm that source and target belong to this network
-
-
             bool pass = true;
 
             //confirms that the source and target belong to this network
@@ -140,7 +127,7 @@ namespace Vulpine.Core.AI.Nural
             target.AddInput(ax);
             axons.Add(index, ax);
 
-            return false;
+            return true;
         }
 
 
@@ -222,48 +209,22 @@ namespace Vulpine.Core.AI.Nural
             NetworkCPP child = new NetworkCPP(this);
 
             //refrences the edge tables
-            var net1 = this.axons;
-            var net2 = mate.axons;
-            var netC = child.axons;
+            var net1 = mate.axons;
+            var net2 = child.axons;
 
-            //foreach (Axon ax in net1.ListItems())
-            //{
-            //    //copies each axon from the dominate parent
-            //    child.AddAxon(ax);
-            //}
-
-            foreach (Axon ax in net2.ListItems())
+            foreach (Axon ax in net1.ListItems())
             {
-                //we are only intrested in acvitve crossovers
-                if (!netC.HasKey(ax.Index)) continue;
-                if (!ax.Enabled) continue;
-
                 //obtains the child axon
-                Axon axc = netC.GetValue(ax.Index);
+                Axon axc = net2.GetValue(ax.Index);
+                if (axc == null) continue;
 
-                if (axc.Enabled)
-                {
-                    //copies the weight based on crossover
-                    if (rng.NextDouble() < rate)
-                        axc.Weight = ax.Weight;
-                }
-                else
-                {
-                    //copies the weight and enables the axon
-                    axc.Weight = ax.Weight;
-                    axc.Enabled = true;
-                }
+                //determins the new weight based on crossover
+                bool cross = rng.RandBool(rate);
+                axc.Weight = cross ? ax.Weight : axc.Weight;
 
-
-                //if (netC.HasKey(ax.InvNo))
-                //{
-                //    //copies the weight based on crossover
-                //    if (rng.NextDouble() > rate) continue;
-
-                //    Axon axc = netC[ax.InvNo];
-                //    axc.Weight = ax.Weight;
-
-                //}
+                //has a chance of enabling if either are disabled
+                bool en = ax.Enabled && axc.Enabled;
+                axc.Enabled = en || rng.RandBool(0.25);
             }
 
             return child;
@@ -271,46 +232,155 @@ namespace Vulpine.Core.AI.Nural
 
 
 
-        public void Expand(VRandom rng)
+        //public void Expand()
+        //{
+        //    Nuron n1, n2;
+
+        //    RandPair(out n1, out n2);
+        //    Axon target = n2.GetAxon(n1);
+
+        //    if (target == null)
+        //    {
+        //        //creates a new axon betwen the neurons
+        //        int index = RandIndex();
+        //        double weight = rng.RandGauss();
+
+        //        ////we drop the axon in case of collision
+        //        //if (index < 0) return;
+
+        //        //adds the values to our data-structor
+        //        target = new Axon(index, n1.Index, weight);
+        //        n2.AddInput(target);
+        //        axons.Add(index, target);
+        //    }
+        //    else if ((n2.Level - n1.Level) > 3)
+        //    {
+        //        //disables the target edge
+        //        double weight = target.Weight;
+        //        target.Enabled = false;
+
+        //        //creates a new node
+        //        int index = RandIndex();
+        //        int level = (n2.Level + n1.Level) / 2;
+        //        ActFunc func = RandFunc();
+
+        //        //inserts the node into our data-structor
+        //        Nuron node = new Nuron(this, func, level, index);
+        //        nurons.Add(index, node);
+
+        //        //adds an edge between n1 and x with weight 1.0
+        //        index = RandIndex();
+        //        target = new Axon(index, n1.Index, 1.0);
+        //        node.AddInput(target);
+        //        axons.Add(index, target);
+
+        //        //adds an edge between x and n2 with target weight
+        //        index = RandIndex();
+        //        target = new Axon(index, node.Index, weight);
+        //        n2.AddInput(target);
+        //        axons.Add(index, target);
+        //    }
+            
+        //}
+
+
+        public void Expand()
         {
             Nuron n1, n2;
 
-            RandPair(out n1, out n2);
+            //generates a pair of random nurons
+            bool test = RandPair(out n1, out n2);
             Axon target = n2.GetAxon(n1);
 
-            if (target == null)
+            if (test && target == null)
             {
-                //creates a new axon betwen the neurons
-                int index = rng.NextInt() & Int32.MaxValue;
-                double weight = rng.RandGauss(0.0, 1.0);
+                //creates a new axon between the nurons
+                double weight = rng.RandGauss();
+                AddAxonInit(n1, n2, weight);
 
-                //we drop the axon in case of collision
-                if (axons.HasKey(index)) return;
-
-                //adds the values to our data-structor
-                target = new Axon(index, n1.Index, weight);
-                n2.AddInput(target);
-                axons.Add(index, target);
             }
-            else
+            else if (test && !target.Enabled)
+            {
+                //reinitilises the axon with a new weight
+                target.Weight = rng.RandGauss();
+                target.Enabled = true;
+            }
+            else if ((n2.Level - n1.Level) > 3)
             {
                 //disables the target edge
+                double weight = target.Weight;
                 target.Enabled = false;
 
-                //creates a new node
-                int index = rng.NextInt() & Int32.MaxValue;
+                //creates a new node with a random funciton
+                int index = RandIndex();
                 int level = (n2.Level + n1.Level) / 2;
                 ActFunc func = RandFunc();
 
-                //we drop the node in case of collision
-                if (nurons.HasKey(index)) return;
+                //aborts the operation if we fail to insert
+                if (index < 0) return;
 
-                //NOTE: Need to add edges!!
+                //inserts the node into our data-structor
+                Nuron nx = new Nuron(this, func, level, index);
+                nurons.Add(index, nx);
+
+                //adds axons to replace the missing axon
+                AddAxonInit(n1, nx, 1.0);
+                AddAxonInit(nx, n2, weight);
             }
-            
         }
 
 
+        public void MutateSingle(double power)
+        {
+            //selects a random axon
+            int index = rng.RandInt(axons.Count);
+            Axon ax = axons.ElementAt(index).Item;
+
+            //permutes the weight by a small amount
+            double delta = rng.RandGauss(0.0, power);
+            ax.Weight = ax.Weight + delta;
+
+            //has a chance of renabling disabled axons
+            ax.Enabled |= rng.RandBool(0.1);
+        }
+
+
+        public void Mutate(double rate, double power)
+        {
+            foreach (Axon ax in axons.ListItems())
+            {
+                //mutates weights based on the rate of mutation
+                if (rng.RandBool(1.0 - rate)) continue;
+
+                //permutes the weight by a small amount
+                double delta = rng.RandGauss() * power;
+                ax.Weight = ax.Weight + delta;
+            }
+        }
+
+
+        /// <summary>
+        /// Helper method: Adds an axon connection to the network, leading
+        /// from the source nuron to the target nuron. It dose not check the 
+        /// topology of the network before adding the axon, so care must be 
+        /// taken to avoid redunent or recurent connections. It returns null 
+        /// if it is unable to add the axon.
+        /// </summary>
+        /// <param name="source">Source nuron</param>
+        /// <param name="target">Target nuron</param>
+        /// <param name="weight">Weight of axon</param>
+        /// <returns>The added axon</returns>
+        private Axon AddAxonInit(Nuron source, Nuron target, double weight)
+        {
+            int index = RandIndex();
+            if (index < 0) return null;
+
+            Axon ax = new Axon(index, source.Index, weight);
+            target.AddInput(ax);
+            axons.Add(index, ax);
+
+            return ax;
+        }
 
 
 
@@ -327,12 +397,34 @@ namespace Vulpine.Core.AI.Nural
         }
 
         /// <summary>
+        /// Helper method: Selects a single nuron from the network at random.
+        /// </summary>
+        /// <returns>A randomly selected nuron</returns>
+        private Nuron RandNuron()
+        {
+            //generates a random nuron in O(n)
+            int index = rng.RandInt(nurons.Count);
+            return nurons.ElementAt(index).Item;
+        }
+
+        /// <summary>
+        /// Helper method: Selects a single axon from the network at random.
+        /// </summary>
+        /// <returns>A randomly selected axon</returns>
+        private Axon RandAxon()
+        {
+            //generates a random axon in O(n)
+            int index = rng.RandInt(axons.Count);
+            return axons.ElementAt(index).Item;
+        }
+
+        /// <summary>
         /// Helper method: generates a random index for refering to
         /// nurons or axons, garenteed to be unique. It returns negative
         /// if no sutch index can be found in a timely fassion.
         /// </summary>
         /// <returns>A random unique index</returns>
-        internal int RandIndex()
+        private int RandIndex()
         {
             int index = -1;
             int count = 0;
@@ -353,34 +445,28 @@ namespace Vulpine.Core.AI.Nural
         }
 
         /// <summary>
-        /// Helper method: Selects a single nuron from the network at random.
-        /// </summary>
-        /// <returns>A randomly selected nuron</returns>
-        private Nuron RandNuron()
-        {
-            //generates a random nuron in O(n)
-            int index = rng.RandInt(nurons.Count);
-            return nurons.ElementAt(index).Item;
-        }
-
-        /// <summary>
         /// Helper mehtod: Selects a pair of nurons at random from diffrent 
-        /// levels of the network. The nurons are always listed in order.
+        /// levels of the network. The nurons are always listed in order. It
+        /// returns false if it was ubale to generate a valid pair.
         /// </summary>
         /// <param name="n1">The lower level nuron</param>
         /// <param name="n2">The upper level nuron</param>
-        private void RandPair(out Nuron n1, out Nuron n2)
+        private bool RandPair(out Nuron n1, out Nuron n2)
         {
             //generates two random nurons
             n1 = RandNuron();
             n2 = RandNuron();
 
+            int count = 0;
+
             //keeps searching while the nurons are on the same level
-            while (n1.Level == n2.Level)
+            while (n1.Level == n2.Level && count < MAX_TRY)
             {
                 Nuron n3 = RandNuron();
                 n1 = n2;
                 n2 = n3;
+
+                count++;
             }
 
             //swaps the nurons if they are out of order
@@ -390,6 +476,9 @@ namespace Vulpine.Core.AI.Nural
                 n1 = n2;
                 n2 = n3;
             }
+
+            //indicates if we found a valid pair
+            return (count < MAX_TRY);
         }
 
 

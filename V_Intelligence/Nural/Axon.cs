@@ -98,7 +98,7 @@ namespace Vulpine.Core.AI.Nural
         public bool Enabled
         {
             get { return enabled; }
-            set { enabled = true; }
+            set { enabled = value; }
         }
 
         
