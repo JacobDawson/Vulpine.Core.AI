@@ -41,13 +41,22 @@ namespace Vulpine.Core.AI.Nural
     /// Evolution of Augmenting Topoligies (NEAT) algorythim to evolve the structor
     /// nessary to produce the desired patterns.
     /// </summary>
-    public sealed class NetworkCPP
+    public sealed class NetworkCPP : Genetic<NetworkCPP>
     {
+        
+        //indicates the maximum number of levels
+        private const int MAX_LV = 1024;
+
         //indicates the maximum number of tries for random probing
         private const int MAX_TRY = 64;
 
-        //indicates the maximum number of levels
-        private const int MAX_LV = 1024;
+        //global paramaters that determin how networks evolve
+        private const double C0 = 2.0;
+        private const double C1 = 1.0;
+        private const double SDN = 1.0;
+        private const double SDS = 0.2;
+        private const double P_Linear = 0.5;
+        private const double P_Node = 0.1;
 
         //uses a random number genrator to evolve the network
         private VRandom rng;
@@ -57,10 +66,10 @@ namespace Vulpine.Core.AI.Nural
         private Table<Int32, Nuron> nurons;
 
 
-        private NetworkCPP(NetworkCPP other)
+        private NetworkCPP(VRandom rng, NetworkCPP other)
         {
             //copies the RNG by refrence
-            rng = other.rng;
+            this.rng = rng;
 
             int size_n = other.nurons.Buckets;
             int size_a = other.nurons.Buckets;
@@ -131,10 +140,6 @@ namespace Vulpine.Core.AI.Nural
         }
 
 
-        
-
-
-
 
 
         internal Axon GetAxonByID(int id)
@@ -148,13 +153,22 @@ namespace Vulpine.Core.AI.Nural
         }
 
 
-        //NOTE: Could we make the paramaters static?
 
-        public double Compare(NetworkCPP other, params double[] c)
+
+
+        #region Genetic Implementaiton...
+
+
+        /// <summary>
+        /// Compares the current genotype to the genotype of a diffrent
+        /// nural net. The result is a positive real value that indicates
+        /// how siimilar the genotypes are. This is tipicaly used to
+        /// seperate a population of individules into species.
+        /// </summary>
+        /// <param name="other">Nural net for comparison</param>
+        /// <returns>Mesure of similarity</returns>
+        public double Compare(NetworkCPP other)
         {
-            //makes certain that we have enough paramaters
-            if (c.Length < 2) throw new ArgumentException();
-
             //refrences the edge tables
             var net1 = this.axons;
             var net2 = other.axons;
@@ -164,13 +178,16 @@ namespace Vulpine.Core.AI.Nural
             int disjoint = 0;    
             double wbar = 0.0;
 
-            foreach (Axon ax in net1.ListItems())
+            foreach (Axon ax1 in net1.ListItems())
             {
-                if (net2.HasKey(ax.Index))
+                //tries to find the matching axon
+                Axon ax2 = net2.GetValue(ax1.Index);
+
+                if (ax2 != null)
                 {
                     //computes the distance between the weights
-                    double w1 = ax.Weight;
-                    double w2 = net2[ax.Index].Weight;
+                    double w1 = ax1.Weight;
+                    double w2 = ax2.Weight;
 
                     wbar += Math.Abs(w1 - w2);
                     match += 1;
@@ -182,10 +199,11 @@ namespace Vulpine.Core.AI.Nural
                 }
             }
 
-            foreach (Axon ax in net2.ListItems())
-            {
+            foreach (Axon ax1 in net2.ListItems())
+            {               
                 //only counts the missing disjoint edges
-                if (!net1.HasKey(ax.Index)) disjoint += 1;
+                Axon ax2 = net2.GetValue(ax1.Index);
+                if (ax2 == null) disjoint += 1;
             }
 
             //determins the size of the larger network
@@ -193,34 +211,53 @@ namespace Vulpine.Core.AI.Nural
             size = (size > 20) ? size - 20 : 1;
 
             //couputes the distance for specisation
-            double dist = (c[0] * disjoint) / (double)size;
-            dist += c[1] * (wbar / (double)match);
+            double dist = (C0 * disjoint) / (double)size;
+            dist += C1 * (wbar / (double)match);
 
             return dist;
         }
 
 
-        //NOTE: What should happen to disabled nodes during crossover?
-
-
-        public NetworkCPP Combine(NetworkCPP mate, VRandom rng, double rate)
+        /// <summary>
+        /// Combines the genes of the curent nural net with the genes of
+        /// another network to create a brand new offspring. The idea is
+        /// that the child network will possess trates from both its
+        /// parents, similar to sexual reproduction.
+        /// </summary>
+        /// <param name="rng">Random number generator</param>
+        /// <param name="mate">Mate of the curent network</param>
+        /// <returns>The child of both networks</returns>
+        public NetworkCPP Combine(VRandom rng, NetworkCPP mate)
         {
             //makes a clone of the dominate parent
-            NetworkCPP child = new NetworkCPP(this);
+            NetworkCPP child = new NetworkCPP(rng, this);
 
             //refrences the edge tables
             var net1 = mate.axons;
             var net2 = child.axons;
 
+            //determins weather or not to do liniar crossover
+            bool liniar = rng.RandBool(P_Linear);
+            double a = rng.NextDouble();
+
             foreach (Axon ax in net1.ListItems())
             {
-                //obtains the child axon
+                //obtains the matching child axon
                 Axon axc = net2.GetValue(ax.Index);
                 if (axc == null) continue;
 
-                //determins the new weight based on crossover
-                bool cross = rng.RandBool(rate);
-                axc.Weight = cross ? ax.Weight : axc.Weight;
+                if (liniar)
+                {
+                    //chooses a value between the two weights
+                    double weight = axc.Weight * (1.0 - a);
+                    axc.Weight = weight + (ax.Weight * a);
+                }
+                else
+                {
+                    //determins the new weight based on crossover
+                    bool cross = rng.RandBool();
+                    if (cross) axc.Weight = ax.Weight;
+                }
 
                 //has a chance of enabling if either are disabled
                 bool en = ax.Enabled && axc.Enabled;
@@ -231,60 +268,89 @@ namespace Vulpine.Core.AI.Nural
         }
 
 
-
-        //public void Expand()
-        //{
-        //    Nuron n1, n2;
-
-        //    RandPair(out n1, out n2);
-        //    Axon target = n2.GetAxon(n1);
-
-        //    if (target == null)
-        //    {
-        //        //creates a new axon betwen the neurons
-        //        int index = RandIndex();
-        //        double weight = rng.RandGauss();
-
-        //        ////we drop the axon in case of collision
-        //        //if (index < 0) return;
-
-        //        //adds the values to our data-structor
-        //        target = new Axon(index, n1.Index, weight);
-        //        n2.AddInput(target);
-        //        axons.Add(index, target);
-        //    }
-        //    else if ((n2.Level - n1.Level) > 3)
-        //    {
-        //        //disables the target edge
-        //        double weight = target.Weight;
-        //        target.Enabled = false;
-
-        //        //creates a new node
-        //        int index = RandIndex();
-        //        int level = (n2.Level + n1.Level) / 2;
-        //        ActFunc func = RandFunc();
-
-        //        //inserts the node into our data-structor
-        //        Nuron node = new Nuron(this, func, level, index);
-        //        nurons.Add(index, node);
-
-        //        //adds an edge between n1 and x with weight 1.0
-        //        index = RandIndex();
-        //        target = new Axon(index, n1.Index, 1.0);
-        //        node.AddInput(target);
-        //        axons.Add(index, target);
-
-        //        //adds an edge between x and n2 with target weight
-        //        index = RandIndex();
-        //        target = new Axon(index, node.Index, weight);
-        //        n2.AddInput(target);
-        //        axons.Add(index, target);
-        //    }
-            
-        //}
+        /// <summary>
+        /// Clones the current nural net with some random mutation of its
+        /// genotpye. The rate of mutaiton determins how many of the network
+        /// connections are preturbed. For exampe, a mutation rate of 0.5
+        /// indicates that half the weights will be perturbed.
+        /// </summary>
+        /// <param name="rng">Random number generator</param>
+        /// <param name="rate">Rate of mutation</param>
+        /// <returns>A mutated network</returns>
+        public NetworkCPP Mutate(VRandom rng, double rate)
+        {
+            //clones a child and then mutates it
+            var child = new NetworkCPP(rng, this);
+            child.MutateSelf(rate);
+            return child;
+        }
 
 
-        public void Expand()
+        /// <summary>
+        /// Preterbs the current neural net by some random amount without
+        /// creating a clone. The rate of mutaiton determins how many of the 
+        /// network connections are preturbed. For exampe, a mutation rate 
+        /// of 0.5 indicates that half the weights will be perturbed.
+        /// </summary>
+        /// <param name="rate">Rate of mutation</param>
+        public void MutateSelf(double rate)
+        {
+            //clamps the rate to be between zero and one
+            rate = VMath.Clamp(rate);
+
+            if (rng.RandBool(P_Node))
+            {
+                //changes the activation funciton of a single node
+                Nuron node = RandNuron();
+                node.Func = RandFunc();
+                return;
+            }
+
+            foreach (Axon ax in axons.ListItems())
+            {
+                //mutates weights based on the rate of mutation
+                if (rng.RandBool(1.0 - rate)) continue;
+
+                if (ax.Enabled)
+                {
+                    //permutes the weight by a small amount
+                    double delta = rng.RandGauss() * SDS;
+                    ax.Weight = ax.Weight + delta;
+                }
+                else
+                {
+                    //resets the neuron to a small weight
+                    ax.Weight = rng.RandGauss() * SDS;
+                    ax.Enabled = true;
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Creates a new nural net with more genes than its parent. This is 
+        /// diffrent from regular mutaiton, as the genotype becomes bigger, 
+        /// increasing the search space and opening new opertunites for 
+        /// diversification and improvment.
+        /// </summary>
+        /// <param name="rng">Random number generator</param>
+        /// <returns>An organism with an expanded genotype</returns>
+        public NetworkCPP Expand(VRandom rng)
+        {
+            //clones a child and then expands it
+            var child = new NetworkCPP(rng, this);
+            child.ExpandSelf();
+            return child;
+        }
+
+
+        /// <summary>
+        /// Expands the curent nural net, in place, by either inserting a
+        /// new node along a pre-existing edge or creating a new edge. The
+        /// probibility of either event occoring is determined by the
+        /// existing topology.
+        /// </summary>
+        public void ExpandSelf()
         {
             Nuron n1, n2;
 
@@ -295,14 +361,14 @@ namespace Vulpine.Core.AI.Nural
             if (test && target == null)
             {
                 //creates a new axon between the nurons
-                double weight = rng.RandGauss();
+                double weight = rng.RandGauss() * SDN;
                 AddAxonInit(n1, n2, weight);
 
             }
             else if (test && !target.Enabled)
             {
                 //reinitilises the axon with a new weight
-                target.Weight = rng.RandGauss();
+                target.Weight = rng.RandGauss() * SDN;
                 target.Enabled = true;
             }
             else if ((n2.Level - n1.Level) > 3)
@@ -330,34 +396,9 @@ namespace Vulpine.Core.AI.Nural
         }
 
 
-        public void MutateSingle(double power)
-        {
-            //selects a random axon
-            int index = rng.RandInt(axons.Count);
-            Axon ax = axons.ElementAt(index).Item;
+        #endregion ////////////////////////////////////////////////////////////////////
 
-            //permutes the weight by a small amount
-            double delta = rng.RandGauss(0.0, power);
-            ax.Weight = ax.Weight + delta;
-
-            //has a chance of renabling disabled axons
-            ax.Enabled |= rng.RandBool(0.1);
-        }
-
-
-        public void Mutate(double rate, double power)
-        {
-            foreach (Axon ax in axons.ListItems())
-            {
-                //mutates weights based on the rate of mutation
-                if (rng.RandBool(1.0 - rate)) continue;
-
-                //permutes the weight by a small amount
-                double delta = rng.RandGauss() * power;
-                ax.Weight = ax.Weight + delta;
-            }
-        }
-
+        #region Helper Methods...
 
         /// <summary>
         /// Helper method: Adds an axon connection to the network, leading
@@ -372,9 +413,21 @@ namespace Vulpine.Core.AI.Nural
         /// <returns>The added axon</returns>
         private Axon AddAxonInit(Nuron source, Nuron target, double weight)
         {
-            int index = RandIndex();
-            if (index < 0) return null;
+            int a1 = source.Index;
+            int a2 = target.Index;
 
+            //computes a hash of the endpoints as an index
+            int index = unchecked((a1 * 907) ^ a2);
+            index = index & Int32.MaxValue;
+
+            //we must generate an index if we have that one
+            if (axons.HasKey(index))
+            {
+                index = RandIndex();
+                if (index < 0) return null;
+            }
+
+            //adds the axon to the target and our network
             Axon ax = new Axon(index, source.Index, weight);
             target.AddInput(ax);
             axons.Add(index, ax);
@@ -383,6 +436,33 @@ namespace Vulpine.Core.AI.Nural
         }
 
 
+        /// <summary>
+        /// Helper method: Enumerates all of the axons in the current network.
+        /// </summary>
+        /// <returns>An enumeration of all axons</returns>
+        private IEnumerable<Axon> ListAxons()
+        {
+            //simply lists the axons in the table
+            return axons.ListItems();
+        }
+
+        /// <summary>
+        /// Helper method: Finds an axon in the curent network that matches a
+        /// target axon from another network. If no match can be found, it
+        /// returns null. 
+        /// </summary>
+        /// <param name="other">Target axon</param>
+        /// <returns>A matching axon</returns>
+        private Axon FindMatch(Axon other)
+        {
+            //tries to find an axon with a matching ID
+            return axons.GetValue(other.Index);
+        }
+
+
+        #endregion ////////////////////////////////////////////////////////////////////
+
+        #region Random Methods...
 
         /// <summary>
         /// Helper method: Chooses a random activation function, out 
@@ -481,7 +561,7 @@ namespace Vulpine.Core.AI.Nural
             return (count < MAX_TRY);
         }
 
-
+        #endregion ////////////////////////////////////////////////////////////////////
 
     }
 }

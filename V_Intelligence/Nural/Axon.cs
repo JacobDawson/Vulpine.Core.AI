@@ -56,7 +56,7 @@ namespace Vulpine.Core.AI.Nural
         {
             StringBuilder sb = new StringBuilder();
 
-            sb.AppendFormat("Axon-{0:X32} ", index);
+            sb.AppendFormat("Axon-{0:X8} ", index);
             sb.AppendFormat("{0:G6} ", weight);
             sb.Append(enabled ? "Enabled" : "Disabled");
 
