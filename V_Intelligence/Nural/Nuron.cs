@@ -27,7 +27,7 @@ using Vulpine.Core.Data.Lists;
 
 namespace Vulpine.Core.AI.Nural
 {
-    public sealed class Nuron : IComparable<Nuron>
+    public sealed class Nuron : IComparable<Nuron>, Node<Nuron>
     {
         //stores the index of the nuron
         private int index;
@@ -42,7 +42,7 @@ namespace Vulpine.Core.AI.Nural
         private ActFunc func;
 
         //keeps a list of conecting axonx
-        private VList<Int32> inputs;
+        private VList<Axon> inputs;
 
         //referes to the parent network
         private NetworkCPP network;
@@ -55,7 +55,7 @@ namespace Vulpine.Core.AI.Nural
             this.level = level;
             this.index = index;
 
-            inputs = new VListArray<Int32>();
+            inputs = new VListArray<Axon>();
             value = 0.0;
         }
 
@@ -78,13 +78,13 @@ namespace Vulpine.Core.AI.Nural
             value = other.value;
 
             //makes a deep copy of the list of inputs
-            inputs = new VListArray<Int32>(other.inputs);
+            inputs = new VListArray<Axon>(other.inputs);
         }
 
         public int CompareTo(Nuron other)
         {
-            //compares the indices of the nodes
-            return level.CompareTo(other.level);
+            //compares the levels of the nodes
+            return level.CompareTo(other.level);        
         }
 
 
@@ -121,82 +121,135 @@ namespace Vulpine.Core.AI.Nural
         /// <returns>An interation of all input axons</returns>
         public IEnumerable<Axon> ListAxons()
         {
-            foreach (int index in inputs)
-            {
-                Axon ax = network.GetAxonByID(index);
-                if (ax == null) continue;
+            //checkes that we have not been disposed
+            if (network == null) yield break;
 
-                yield return ax;
+            //simply itterates over the list
+            foreach (Axon ax in inputs) yield return ax;
+        }
+
+        public IEnumerable<Nuron> ListInputs()
+        {
+            //checkes that we have not been disposed
+            if (network == null) yield break;
+
+            foreach (Axon ax in inputs)
+            {
+                //returns the nurons that have matching axons
+                Nuron temp = network.GetNuronByID(ax.Source);
+                if (temp != null) yield return temp;            
             }
         }
 
 
-        internal IEnumerable<Int32> ListInputs()
-        {
-            //loops over the list of edge numbers
-            return inputs.AsEnumerable();
-        }
+        //internal IEnumerable<Int32> ListInputs()
+        //{
+        //    //loops over the list of edge numbers
+        //    return inputs.AsEnumerable();
+        //}
 
 
 
-        //THIS METHOD IS CRITICAL !!!
-        internal void AddInput(Axon input)
-        {
-            //adds the inovation number to our list
-            inputs.Add(input.Index);
-        }
+        ////THIS METHOD IS CRITICAL !!!
+        //internal void AddInput(Axon input)
+        //{
+        //    //adds the inovation number to our list
+        //    inputs.Add(input.Index);
+        //}
 
 
 
 
         /// <summary>
-        /// Obtains the axon that links this nuron with another given nuron, 
-        /// if no sutch axon exists it returns null. The order in which the 
-        /// nurons are given dose not matter.
+        /// Obtains the axon that connects to this nuron from another given
+        /// nuron. Note that the order of the nurons is important. It returns
+        /// null in no sutch connection exists.
         /// </summary>
         /// <param name="other">Another nuron</param>
         /// <returns>The axon conecting the nurons</returns>
-        internal Axon GetAxon(Nuron other)
+        public Axon GetAxon(Nuron other)
         {
-            if (other.level > this.level)
-            {
-                //makes shure the nodes are in the right order
-                return other.GetAxon(this);
-            }
+            //if (other.level > this.level)
+            //{
+            //    //makes shure the nodes are in the right order
+            //    return other.GetAxon(this);
+            //}
 
-            foreach (int invno in inputs)
-            {
-                Axon ax = network.GetAxonByID(invno);
-                if (ax == null) continue;
+            //foreach (int invno in inputs)
+            //{
+            //    Axon ax = network.GetAxonByID(invno);
+            //    if (ax == null) continue;
 
-                //determins if we find a match
-                if (ax.Input == other.Index) return ax;
+            //    //determins if we find a match
+            //    if (ax.Source == other.Index) return ax;
+            //}
+
+            ////we faild to find the axon
+            //return null;
+
+            //checkes that we have not been disposed
+            if (network == null) return null;
+
+            foreach (Axon ax in inputs)
+            {
+                //checks each axon for a match
+                if (ax.Source == other.Index) return ax;
             }
 
             //we faild to find the axon
             return null;
-
         }
 
-
-
-        internal bool AddAxon(Nuron target, double weight)
+        internal Axon AddAxon(Nuron input, double weight)
         {
+            ////enshures the nurons belong to the same network
+            //if (network != target.network)
+            //throw new InvalidOperationException();
+
+            //int index = -1; // network.RandIndex();
+            //if (index < 0) return false;
+
+            //Axon ax = new Axon(index, target.Index, weight);
+            //inputs.Add(index);
+            ////network.AddAxon(ax);
+
             //enshures the nurons belong to the same network
-            if (network != target.network)
-            throw new InvalidOperationException();
+            if (network == null || network != input.network)
+                throw new InvalidOperationException();
 
-            int index = -1; // network.RandIndex();
-            if (index < 0) return false;
+            int source = this.Index;
+            int target = input.Index;
 
-            Axon ax = new Axon(index, target.Index, weight);
-            inputs.Add(index);
-            //network.AddAxon(ax);            
+            //creates the axon and adds it to our list
+            Axon ax = new Axon(0, source, target, weight);
+            inputs.Add(ax);
 
-            return true;
+            return ax;
+
+        }
+
+        internal void ClearData()
+        {
+            //desposes of the internal data sturctor
+            if (inputs != null) inputs.Clear();
+
+            //deletes the network to avoid cyclicl refrences 
+            this.network = null;
+            this.inputs = null;
         }
 
 
-        
+        Nuron Node<Nuron>.Data
+        {
+            get { return this; } //refrence to ourself
+            set { throw new InvalidOperationException(); }
+        }
+
+        //simply calls the non generic method
+        IEnumerable<Node<Nuron>> Node<Nuron>.ListChildren()
+        { return ListInputs(); }
+
+        //calling the public despose method dose nothing
+        void IDisposable.Dispose() { }
     }
 }

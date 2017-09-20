@@ -61,8 +61,8 @@ namespace Vulpine.Core.AI.Nural
         //uses a random number genrator to evolve the network
         private VRandom rng;
 
-        //stores a table of axons by inovation number
-        private Table<Int32, Axon> axons;
+        //stores a table of nurons by inovation number
+        //private Table<Int32, Axon> axons;
         private Table<Int32, Nuron> nurons;
 
 
@@ -71,11 +71,14 @@ namespace Vulpine.Core.AI.Nural
             //copies the RNG by refrence
             this.rng = rng;
 
-            int size_n = other.nurons.Buckets;
-            int size_a = other.nurons.Buckets;
+            //int size_n = other.nurons.Buckets;
+            //int size_a = other.nurons.Buckets;
 
-            nurons = new TableClosed<Int32, Nuron>(size_n);
-            axons = new TableClosed<Int32, Axon>(size_a);
+            //nurons = new TableClosed<Int32, Nuron>(size_n);
+            //axons = new TableClosed<Int32, Axon>(size_a);
+
+            int size = other.nurons.Buckets;
+            nurons = new TableOpen<Int32, Nuron>(size);
 
             foreach (var pair in other.nurons)
             {
@@ -83,11 +86,11 @@ namespace Vulpine.Core.AI.Nural
                 nurons.Add(pair.Key, copy);
             }
 
-            foreach (var pair in other.axons)
-            {
-                Axon copy = new Axon(pair.Item);
-                axons.Add(pair.Key, copy);
-            }
+            //foreach (var pair in other.axons)
+            //{
+            //    Axon copy = new Axon(pair.Item);
+            //    axons.Add(pair.Key, copy);
+            //}
         }
 
         /// <summary>
@@ -96,7 +99,7 @@ namespace Vulpine.Core.AI.Nural
         /// </summary>
         public int Axons
         {
-            get { return axons.Count; }
+            get { return -1; } //NOTE: Add a count variable
         }
 
         /// <summary>
@@ -160,10 +163,10 @@ namespace Vulpine.Core.AI.Nural
 
 
 
-        internal Axon GetAxonByID(int id)
-        {
-            return axons.GetValue(id);
-        }
+        //internal Axon GetAxonByID(int id)
+        //{
+        //    return axons.GetValue(id);
+        //}
 
         internal Nuron GetNuronByID(int id)
         {
@@ -370,9 +373,13 @@ namespace Vulpine.Core.AI.Nural
 
             if (test && target == null)
             {
+                ////creates a new axon between the nurons
+                //double weight = rng.RandGauss() * SDN;
+                //AddAxonInit(n1, n2, weight);
+
                 //creates a new axon between the nurons
                 double weight = rng.RandGauss() * SDN;
-                AddAxonInit(n1, n2, weight);
+                n2.AddAxon(n1, weight);
 
             }
             else if (test && !target.Enabled)
@@ -399,9 +406,13 @@ namespace Vulpine.Core.AI.Nural
                 Nuron nx = new Nuron(this, func, level, index);
                 nurons.Add(index, nx);
 
+                ////adds axons to replace the missing axon
+                //AddAxonInit(n1, nx, 1.0);
+                //AddAxonInit(nx, n2, weight);
+
                 //adds axons to replace the missing axon
-                AddAxonInit(n1, nx, 1.0);
-                AddAxonInit(nx, n2, weight);
+                nx.AddAxon(n1, 1.0);
+                n2.AddAxon(nx, weight);
             }
         }
 
@@ -410,40 +421,40 @@ namespace Vulpine.Core.AI.Nural
 
         #region Helper Methods...
 
-        /// <summary>
-        /// Helper method: Adds an axon connection to the network, leading
-        /// from the source nuron to the target nuron. It dose not check the 
-        /// topology of the network before adding the axon, so care must be 
-        /// taken to avoid redunent or recurent connections. It returns null 
-        /// if it is unable to add the axon.
-        /// </summary>
-        /// <param name="source">Source nuron</param>
-        /// <param name="target">Target nuron</param>
-        /// <param name="weight">Weight of axon</param>
-        /// <returns>The added axon</returns>
-        private Axon AddAxonInit(Nuron source, Nuron target, double weight)
-        {
-            int a1 = source.Index;
-            int a2 = target.Index;
+        ///// <summary>
+        ///// Helper method: Adds an axon connection to the network, leading
+        ///// from the source nuron to the target nuron. It dose not check the 
+        ///// topology of the network before adding the axon, so care must be 
+        ///// taken to avoid redunent or recurent connections. It returns null 
+        ///// if it is unable to add the axon.
+        ///// </summary>
+        ///// <param name="source">Source nuron</param>
+        ///// <param name="target">Target nuron</param>
+        ///// <param name="weight">Weight of axon</param>
+        ///// <returns>The added axon</returns>
+        //private Axon AddAxonInit(Nuron source, Nuron target, double weight)
+        //{
+        //    int a1 = source.Index;
+        //    int a2 = target.Index;
 
-            //computes a hash of the endpoints as an index
-            int index = unchecked((a1 * 907) ^ a2);
-            index = index & Int32.MaxValue;
+        //    //computes a hash of the endpoints as an index
+        //    int index = unchecked((a1 * 907) ^ a2);
+        //    index = index & Int32.MaxValue;
 
-            //we must generate an index if we have that one
-            if (axons.HasKey(index))
-            {
-                index = RandIndex();
-                if (index < 0) return null;
-            }
+        //    //we must generate an index if we have that one
+        //    if (axons.HasKey(index))
+        //    {
+        //        index = RandIndex();
+        //        if (index < 0) return null;
+        //    }
 
-            //adds the axon to the target and our network
-            Axon ax = new Axon(index, source.Index, weight);
-            target.AddInput(ax);
-            axons.Add(index, ax);
+        //    //adds the axon to the target and our network
+        //    Axon ax = new Axon(index, source.Index, weight);
+        //    target.AddInput(ax);
+        //    axons.Add(index, ax);
 
-            return ax;
-        }
+        //    return ax;
+        //}
 
 
         /// <summary>
@@ -452,8 +463,15 @@ namespace Vulpine.Core.AI.Nural
         /// <returns>An enumeration of all axons</returns>
         private IEnumerable<Axon> ListAxons()
         {
-            //simply lists the axons in the table
-            return axons.ListItems();
+            //loops over all the nurons in the network
+            foreach (Nuron n in nurons.ListItems())
+            {
+                //loops over all the axons conected to the nuron
+                foreach (Axon ax in n.ListAxons()) yield return ax;
+            }
+
+            ////simply lists the axons in the table
+            //return axons.ListItems();
         }
 
         /// <summary>
@@ -465,8 +483,20 @@ namespace Vulpine.Core.AI.Nural
         /// <returns>A matching axon</returns>
         private Axon FindMatch(Axon other)
         {
-            //tries to find an axon with a matching ID
-            return axons.GetValue(other.Index);
+            //first atempts to find the target nuron
+            Nuron n1 = nurons.GetValue(other.Target);
+            if (n1 == null) return null;
+
+            //then atempts to find the source nuron
+            Nuron n2 = nurons.GetValue(other.Source);
+            if (n2 == null) return null;
+
+            //obtains the axon from the target
+            return n1.GetAxon(n2);
+
+
+            ////tries to find an axon with a matching ID
+            //return axons.GetValue(other.Index);
         }
 
 
@@ -497,16 +527,16 @@ namespace Vulpine.Core.AI.Nural
             return nurons.ElementAt(index).Item;
         }
 
-        /// <summary>
-        /// Helper method: Selects a single axon from the network at random.
-        /// </summary>
-        /// <returns>A randomly selected axon</returns>
-        private Axon RandAxon()
-        {
-            //generates a random axon in O(n)
-            int index = rng.RandInt(axons.Count);
-            return axons.ElementAt(index).Item;
-        }
+        ///// <summary>
+        ///// Helper method: Selects a single axon from the network at random.
+        ///// </summary>
+        ///// <returns>A randomly selected axon</returns>
+        //private Axon RandAxon()
+        //{
+        //    //generates a random axon in O(n)
+        //    int index = rng.RandInt(axons.Count);
+        //    return axons.ElementAt(index).Item;
+        //}
 
         /// <summary>
         /// Helper method: generates a random index for refering to
@@ -525,7 +555,7 @@ namespace Vulpine.Core.AI.Nural
                 index = rng.NextInt() & Int32.MaxValue;
 
                 //invalidates the index if we have a collision
-                if (axons.HasKey(index)) index = -1;
+                //if (axons.HasKey(index)) index = -1;
                 if (nurons.HasKey(index)) index = -1;
 
                 count++;

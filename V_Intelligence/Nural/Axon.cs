@@ -24,30 +24,33 @@ using System.Text;
 
 namespace Vulpine.Core.AI.Nural
 {
-    public sealed class Axon
+    public sealed class Axon : IComparable<Axon>
     {
-        //stores the index of the axon
-        int index;
+        ////stores the index of the axon
+        //int index;
 
-        //stores the index of the input nuron
-        int input;
+        //refrences the input and output by index
+        int source;
+        int target;
 
         //determins the weight of the conneciton
         double weight;
         bool enabled;   
 
-        internal Axon(int index, int input, double weight)
+        internal Axon(int index, int source, int target, double weight)
         {
-            this.index = index;
-            this.input = input;
+            //this.index = index;
+            this.source = source;
+            this.target = target;
             this.weight = weight;
             this.enabled = true;
         }
 
         internal Axon(Axon other)
         {
-            index = other.index;
-            input = other.input;
+            //index = other.index;
+            source = other.source;
+            target = other.target;
             weight = other.weight;
             enabled = other.enabled;
         }
@@ -56,7 +59,7 @@ namespace Vulpine.Core.AI.Nural
         {
             StringBuilder sb = new StringBuilder();
 
-            sb.AppendFormat("Axon-{0:X8} ", index);
+            sb.AppendFormat("Axon-{0:X8} ", source);
             sb.AppendFormat("{0:G6} ", weight);
             sb.Append(enabled ? "Enabled" : "Disabled");
 
@@ -65,28 +68,46 @@ namespace Vulpine.Core.AI.Nural
 
         public override bool Equals(object obj)
         {
-            //makes sure the object is a keyed item
+            //makes sure the object is another axon
             var other = obj as Axon;
             if (other == null) return false;
 
-            //compares the inovation numbers
-            return (other.index == index);
+            //compares the source an the target
+            if (source != other.source) return false;
+            if (target != other.target) return false;
+
+            return true;
         }
 
         public override int GetHashCode()
         {
-            //uses the inovation number as a hashcode
-            return index;
+            //generates a hash from the source and target
+            return unchecked((source * 907) ^ target);
         }
 
-        public int Index
+        public int CompareTo(Axon other)
         {
-            get { return index; }
+            //sorts the axons first by the target node
+            int test = target.CompareTo(other.target);
+            if (test != 0) return test;
+
+            //then compares the axons by their source
+            return source.CompareTo(other.source);
         }
 
-        public int Input
+        //public int Index
+        //{
+        //    get { return index; }
+        //}
+
+        public int Source
         {
-            get { return input; }
+            get { return source; }
+        }
+
+        public int Target
+        {
+            get { return target; }
         }
 
         public double Weight
@@ -100,6 +121,8 @@ namespace Vulpine.Core.AI.Nural
             get { return enabled; }
             set { enabled = value; }
         }
+
+
 
         
     }
