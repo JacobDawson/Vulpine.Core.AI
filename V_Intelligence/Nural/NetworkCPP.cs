@@ -90,54 +90,72 @@ namespace Vulpine.Core.AI.Nural
             }
         }
 
-
-
+        /// <summary>
+        /// The total number of axons in the network, including
+        /// any disabled axons.
+        /// </summary>
+        public int Axons
+        {
+            get { return axons.Count; }
+        }
 
         /// <summary>
-        /// Adds a nuron to the network at the given level and with the given 
-        /// activation function. It returns null if it was unable to add the nuron.
+        /// The total number of nurons in the network, including
+        /// any disconected nurons.
         /// </summary>
-        /// <param name="func">Activation function of the nuron</param>
-        /// <param name="level">Level of the nuron</param>
-        /// <returns>The inserted nuron</returns>
-        public Nuron AddNuron(ActFunc func, int level)
+        public int Nurons
         {
-            //clamps the level to be within range
-            if (level > MAX_LV) level = MAX_LV;
-            if (level < 0) level = 0;
-
-            //tries to generate a random index
-            int index = RandIndex();
-            if (index < 0) return null;
-
-            //creates the node and adds it
-            Nuron n = new Nuron(this, func, level, index);
-            nurons.Add(index, n);
-
-            return n;
+            get { return nurons.Count; }
         }
 
 
-        public bool AddAxon(Nuron source, Nuron target, double weight)
-        {
-            bool pass = true;
 
-            //confirms that the source and target belong to this network
-            pass &= nurons.HasKey(source.Index);
-            pass &= nurons.HasKey(target.Index);
-            if (!pass) throw new InvalidOperationException();
 
-            //tries to generate a random index
-            int index = RandIndex();
-            if (index < 0) return false;
+        ///// <summary>
+        ///// Adds a nuron to the network at the given level and with the given 
+        ///// activation function. It returns null if it was unable to add the nuron.
+        ///// </summary>
+        ///// <param name="func">Activation function of the nuron</param>
+        ///// <param name="level">Level of the nuron</param>
+        ///// <returns>The inserted nuron</returns>
+        //public Nuron AddNuron(ActFunc func, int level)
+        //{
+        //    //clamps the level to be within range
+        //    if (level > MAX_LV) level = MAX_LV;
+        //    if (level < 0) level = 0;
 
-            //creates the axon, adding it to the target and network
-            Axon ax = new Axon(index, source.Index, weight);
-            target.AddInput(ax);
-            axons.Add(index, ax);
+        //    //tries to generate a random index
+        //    int index = RandIndex();
+        //    if (index < 0) return null;
 
-            return true;
-        }
+        //    //creates the node and adds it
+        //    Nuron n = new Nuron(this, func, level, index);
+        //    nurons.Add(index, n);
+
+        //    return n;
+        //}
+
+
+        //public bool AddAxon(Nuron source, Nuron target, double weight)
+        //{
+        //    bool pass = true;
+
+        //    //confirms that the source and target belong to this network
+        //    pass &= nurons.HasKey(source.Index);
+        //    pass &= nurons.HasKey(target.Index);
+        //    if (!pass) throw new InvalidOperationException();
+
+        //    //tries to generate a random index
+        //    int index = RandIndex();
+        //    if (index < 0) return false;
+
+        //    //creates the axon, adding it to the target and network
+        //    Axon ax = new Axon(index, source.Index, weight);
+        //    target.AddInput(ax);
+        //    axons.Add(index, ax);
+
+        //    return true;
+        //}
 
 
 
@@ -169,19 +187,15 @@ namespace Vulpine.Core.AI.Nural
         /// <returns>Mesure of similarity</returns>
         public double Compare(NetworkCPP other)
         {
-            //refrences the edge tables
-            var net1 = this.axons;
-            var net2 = other.axons;
-
             //used in computing the distance
             int match = 0;
             int disjoint = 0;    
             double wbar = 0.0;
 
-            foreach (Axon ax1 in net1.ListItems())
+            foreach (Axon ax1 in this.ListAxons())
             {
                 //tries to find the matching axon
-                Axon ax2 = net2.GetValue(ax1.Index);
+                Axon ax2 = other.FindMatch(ax1);
 
                 if (ax2 != null)
                 {
@@ -199,15 +213,15 @@ namespace Vulpine.Core.AI.Nural
                 }
             }
 
-            foreach (Axon ax1 in net2.ListItems())
+            foreach (Axon ax1 in other.ListAxons())
             {               
                 //only counts the missing disjoint edges
-                Axon ax2 = net2.GetValue(ax1.Index);
+                Axon ax2 = other.FindMatch(ax1);
                 if (ax2 == null) disjoint += 1;
             }
 
             //determins the size of the larger network
-            int size = Math.Max(net1.Count, net2.Count);
+            int size = Math.Max(this.Axons, other.Axons);
             size = (size > 20) ? size - 20 : 1;
 
             //couputes the distance for specisation
@@ -232,18 +246,14 @@ namespace Vulpine.Core.AI.Nural
             //makes a clone of the dominate parent
             NetworkCPP child = new NetworkCPP(rng, this);
 
-            //refrences the edge tables
-            var net1 = mate.axons;
-            var net2 = child.axons;
-
             //determins weather or not to do liniar crossover
             bool liniar = rng.RandBool(P_Linear);
             double a = rng.NextDouble();
 
-            foreach (Axon ax in net1.ListItems())
+            foreach (Axon ax in mate.ListAxons())
             {
                 //obtains the matching child axon
-                Axon axc = net2.GetValue(ax.Index);
+                Axon axc = child.FindMatch(ax);
                 if (axc == null) continue;
 
                 if (liniar)
@@ -306,7 +316,7 @@ namespace Vulpine.Core.AI.Nural
                 return;
             }
 
-            foreach (Axon ax in axons.ListItems())
+            foreach (Axon ax in ListAxons())
             {
                 //mutates weights based on the rate of mutation
                 if (rng.RandBool(1.0 - rate)) continue;
