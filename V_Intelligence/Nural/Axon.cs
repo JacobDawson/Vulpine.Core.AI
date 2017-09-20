@@ -26,9 +26,6 @@ namespace Vulpine.Core.AI.Nural
 {
     public sealed class Axon : IComparable<Axon>
     {
-        ////stores the index of the axon
-        //int index;
-
         //refrences the input and output by index
         int source;
         int target;
@@ -37,9 +34,8 @@ namespace Vulpine.Core.AI.Nural
         double weight;
         bool enabled;   
 
-        internal Axon(int index, int source, int target, double weight)
+        internal Axon(int source, int target, double weight)
         {
-            //this.index = index;
             this.source = source;
             this.target = target;
             this.weight = weight;
@@ -48,7 +44,6 @@ namespace Vulpine.Core.AI.Nural
 
         internal Axon(Axon other)
         {
-            //index = other.index;
             source = other.source;
             target = other.target;
             weight = other.weight;
@@ -72,7 +67,7 @@ namespace Vulpine.Core.AI.Nural
             var other = obj as Axon;
             if (other == null) return false;
 
-            //compares the source an the target
+            //compares the source and the target
             if (source != other.source) return false;
             if (target != other.target) return false;
 
