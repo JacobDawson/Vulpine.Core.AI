@@ -1,0 +1,122 @@
+﻿
+
+- Nuron Data
+	- Activaiton Fuciton
+	- Curent Value
+	- Previous Value
+
+- Axon Data
+	- Input Nuron
+	- Output Nuron
+	- Weight
+	- Enables Status
+
+- For any given pair of nurons, I need to quickly be able to tell if they are connected
+- For any given nuron, I need to be able to quickly list all the input nurons
+- I need to be able to copy a given nuron, and it's connections, over another nuron
+
+
+=============================================================================================
+
+
+
+Types of Mutation
+
+- Change one or more of the nurions activation functions
+
+- Preturb the weights of the axon connections by some small amount
+
+- Disable an axon, effectivly removing it
+
+- Re-enable a dormet axon
+
+- Replace a dormant axon with a brand new axon
+
+- Move one endpoint of one axon to a new node
+
+
+
+- Add a new axon between two random nodes
+
+- Add a new node, by replacing an existing axon
+
+
+
+==============================================================================================
+
+
+How to identify Nurons and Axons:
+
+Aslo Regarding Mobile Axons:
+
+We need a way to identify Nurons and Axons in disprate Networs, so we can line up the networks
+for crossover and compairison. The easyest way I've found to do this is to give each nuron
+a random ID when it's first created. As the nuron is copies between networks, it retains it's
+ID, allowing it to be tracked.
+
+Axons are a bit diffrent. Axons are defined entierly in terms of the nurons they connect. We
+could imagin Axons that move betwen nurons, but if an axon changes both it's endpoints can we
+relly say that it's the same Axon? It's kind of like the 100 year hammer, that has had 4 new
+handels and 3 new heads. There is also the posablity that the same axon may apear multiple times
+throughout evolution. But as long as the axon connects the same nodes we can consider it the same
+axon. This still alows for convergent evolution if the Nodes are diffrent.
+
+If we must have axons that are allowed to change connecitons, then we should only allow them
+to change at one end. This mirrors biology, in that we can imagin an axon detatching from a
+dendrite and atatchign to another, but we wouden't see it detaching from it's parent Nuron, of
+which is is a physical part. In this case, Axons need to store their own ID, just like Nurons.
+We could still identify them by there own ID and the host nurons, but it may be simpiler just
+to use there own id. 
+
+It is unclear weather allowing axons to change would allow some evolutionary advantage. It is
+something unique to this type of network, so it may be something worth persuing. However, the
+more pragmatic aproach would be to just try and get the network working and add to it later,
+as needed, or desired.
+
+Another important note, is that we DO NOT want multiple axons between the same nodes. This is
+redundant, as we could always combine the weights of each of the axons and treat them as a
+single axon, without impacting the network. There for, it makes since to identify axons by
+their connecitons, as every such connection is unique. This garentees that there are no
+redundant axons. If we were to use some other metric of identifing axons, we would have to
+take special care to check for redundant axons.
+
+That said, moving axons is the only way to change the topology without expanding the network.
+It is possable to enable and disable axons without expandign the network, but then this is
+not relly changing the topology. All other changes to topology involve adding axons or nurons.
+This is not nessarly a bad thing, if we want to divide our population into species, it would
+make since that those species share a similar topology. One way to enshure this is to weight
+diffrent sized networks more in comparison.
+
+
+==============================================================================================
+
+
+Recurent Conections:
+
+One of the more intresting things about graph based nural networks is that they allow for
+the possiblity of recurent connections. This allows them to build loops of nurons which
+can act in a similar capacity to memory circuts inside computers, allowing the Network to
+remember previous inputs. This dose mean that inputs must propergate through the newrok
+in order to affect the outputs.
+
+Even though we ultimatly want to allow recurent connections, it might be benficial to
+try and detect recurent connections. This would allow us to disable recurent connections
+if we so desire, although input values would still need to be propagated. It would also
+aid in enforcing the condition that no axons atach to the input nurons. I also remember
+reading in one of the documents that it is benificial to limit the number of recurent
+connections, which is only possable if we are activly detecting recurancy.
+
+If we go with the Level system I created earlyer for decting recurance, we loose the
+ability to have intra-level axons. In particular, we loose the ability to have
+tight-loop axons which connect nurons to themselves. But atleast we can garentee that
+both nurons are not input nurons, as all input nurons would be on Level 0. This would
+also mean that we could only allow recurent connections when the target nuron is
+not an input nuron.
+
+Alternitivly, we could ignore the issue by allowing recurent connections to input
+nurons. In this case, input nurons would be treated just as any other nuron, and
+not anything special. Originaly I thought that once the input nurons were set, they
+should remain set during propigation, to allow the network to conttiniously reffer
+to the inputs. However, if input nurons are just another nuron, this means that the
+inputs themselves can be updated by the Network. This could lead to some intresting
+topologies, but then it might not be wise to let the network grow so unbounded.

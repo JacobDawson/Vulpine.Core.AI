@@ -31,6 +31,8 @@ namespace Vulpine.Core.AI.Nural
 {
     public enum ActFunc
     {
+        Input,
+
         Identity,
         Sine,
         Cosine,
@@ -47,13 +49,6 @@ namespace Vulpine.Core.AI.Nural
         Heavyside,
         Relu, //rectified linear unit
         Abs,
-
-
-        //multifold
-
-        Max,
-        Min,
-        Mean,
 
 
 

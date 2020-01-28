@@ -26,7 +26,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Vulpine.Core.AI.Nural
+namespace Vulpine.Core.AI.Nural.Old
 {
     public sealed class Axon : IComparable<Axon>
     {
@@ -36,7 +36,7 @@ namespace Vulpine.Core.AI.Nural
 
         //determins the weight of the conneciton
         double weight;
-        bool enabled;
+        bool enabled;   
 
         internal Axon(int source, int target, double weight)
         {
@@ -81,7 +81,7 @@ namespace Vulpine.Core.AI.Nural
         public override int GetHashCode()
         {
             //generates a hash from the source and target
-            return unchecked((source * 32707) ^ target);
+            return unchecked((source * 907) ^ target);
         }
 
         public int CompareTo(Axon other)
@@ -94,10 +94,10 @@ namespace Vulpine.Core.AI.Nural
             return source.CompareTo(other.source);
         }
 
-        public int Index
-        {
-            get { return GetHashCode(); }
-        }
+        //public int Index
+        //{
+        //    get { return index; }
+        //}
 
         public int Source
         {
@@ -121,19 +121,8 @@ namespace Vulpine.Core.AI.Nural
             set { enabled = value; }
         }
 
-        ///// <summary>
-        ///// Makes a genetic copy of another axon that shares the same ID.
-        ///// </summary>
-        ///// <param name="other">Axon to copy</param>
-        //internal void CopyGenome(Axon other)
-        //{
-        //    if (index == other.index)
-        //    {
-        //        source = other.source;
-        //        weight = other.weight;
-        //        Enabled = other.enabled;
-        //    }
-        //}
+
+
         
     }
 }

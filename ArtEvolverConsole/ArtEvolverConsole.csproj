@@ -2,18 +2,20 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{9F06757B-1982-48F8-843A-646A2928744E}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{D8EEC4F8-7CA7-4F23-88C5-B164E5250872}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Vulpine.Core.AI</RootNamespace>
-    <AssemblyName>V_Intelligence</AssemblyName>
+    <RootNamespace>ArtEvolver.Console</RootNamespace>
+    <AssemblyName>ArtEvolverConsole</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -22,7 +24,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -33,25 +36,15 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Delegates.cs" />
-    <Compile Include="Genetic.cs" />
-    <Compile Include="Genetic2.cs" />
-    <Compile Include="Genetics\EvolEventArgs.cs" />
-    <Compile Include="Genetics\EvolMonogen.cs" />
-    <Compile Include="Genetics\Evolution.cs" />
-    <Compile Include="Nural\ActFunc.cs" />
-    <Compile Include="NuralOld\Axon.cs" />
-    <Compile Include="NuralOld\NetworkCPP.cs" />
-    <Compile Include="NuralOld\NuronOld.cs" />
-    <Compile Include="Nural\Axon.cs" />
-    <Compile Include="Nural\AxonComp.cs" />
-    <Compile Include="Nural\NetworkAuto.cs" />
-    <Compile Include="Nural\NetworkComp.cs" />
-    <Compile Include="Nural\Nuron.cs" />
-    <Compile Include="Nural\NuronComp.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -59,16 +52,23 @@
       <Project>{C2C84BBA-4CBD-4DA1-9E1E-F9C964196206}</Project>
       <Name>V_DataStruk</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\V_Imaging\V_Imaging\V_Imaging.csproj">
+      <Project>{FCDE5554-1553-43C4-9554-C1281484CD84}</Project>
+      <Name>V_Imaging</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\V_Mathematics\V_Mathematics\V_Mathematics.csproj">
       <Project>{05D49FA0-CBF3-40D6-B92C-F2D71A0EB587}</Project>
       <Name>V_Mathematics</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ArtEvolver\ArtEvolver.csproj">
+      <Project>{0479D3FE-60F2-42B4-B49C-AAC8EE75C117}</Project>
+      <Name>ArtEvolver</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\V_Intelligence\V_Intelligence.csproj">
+      <Project>{9F06757B-1982-48F8-843A-646A2928744E}</Project>
+      <Name>V_Intelligence</Name>
+    </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="Nural\NetworkDesign.txt" />
-    <Content Include="Nural\TypesOfNetworks.txt" />
-  </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

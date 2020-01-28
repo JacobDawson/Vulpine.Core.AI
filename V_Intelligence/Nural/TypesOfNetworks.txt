@@ -1,0 +1,63 @@
+﻿
+
+I could imagin making several diffrent types of nural network. All networks can be viewed as
+directed graphs, regardless of how they are acutaly implemented. All networks feature input and
+output nodes, which are conneted via axons and other internal nodes. What trully deferenciates
+the diffrent types of network is the topology of the network. The topology both influences and
+is influenced by the implementaiton.
+
+- Cyclic or Acyclic ?
+
+We can basicly partition all networks into one of two groups, based on weather or not those networks
+are allowed to contain cycles. Acyclic networks are Feed-Forward networks. With such networks it's
+possable to set the value of the input nodes, and calculate the output directly from the imput. Such
+networks can be viewed as high-dimentional mathmatical funcitons, as the output from the network, only
+varies with respect to the input. Same input, same output.
+
+Cyclic networks DO NOT represent funcitons, but rather Finite State Machines. I.E. the output of the
+network is dependent upon both the input AND the previous state of the network. Therefor you can't
+just set the inputs and get an output. Instead values need time to propigate through the network.
+The key advantage is that the network can "remember" previous inputs and use them in future calculations.
+Thus such networks are ideal for time dependent input. These are called Recurrent Networks.
+
+
+- NetworkForward
+	- NetworkLayered
+	- NetworkPattern ?
+	- NetworkCompositional ? 
+- NetworkRecurrent
+	- NetworkLSTM ?
+	- NetworkMemory ? 
+	- NetworkAutomaton ! 
+- NetworkSpecialised
+	- NetworkConvolution ?
+	- NetworkDeconvolution ?
+	- NetworkMulti ?
+
+
+- NetworkLayered
+
+This is sort of the clasic network architecture, with the nodes of the network divided into layers,
+with each layer connecting only with the previous layer. Data must travel through the network to 
+reach the later layers. Tipicaly each layer is either fully connected, or nearly so, and is represented
+with a connectivity matrix. I supose this style of network is popular, because it makes back-propigation
+easyer, an laternitive to neuro-genetics, and arguably better.
+
+- NetworkCompositional
+
+This is stialised after the CPPN, or Compositional Pattern Producing Netwok. However, such networks
+can have more uses than just producing patterns, so it makes sense to drop the "Pattern" moniqure
+and refere to the networks as "Compositional". They are still Feed-Forward networks, as each cell in
+an image or pattern is independed from one another, there is no need for the network to retain
+memmory. It is only natural though to extend this arcitecture to include reccurent connections,
+creating an all-togeher diffrent type of network, which is...
+
+- NetworkAutomaton
+
+These are basicly CPPNs that allow recurent connecitons. I decided to call these Atomation Networks
+so as to distinguish them from Composiitional Networks (a distiction severly lacking in the literature)
+since they are basicly Finite State Machines. In fact, such networks could be evolved to replace
+certain bits of computer circiurty. A test to see if the code is working, is to see if it cannot
+evolve a basic data latch.
+
+ 

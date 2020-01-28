@@ -1,6 +1,6 @@
 ﻿/**
  *  This file is an integral part of the Vulpine Core Library
- *  Copyright (c) 2016-2018 Benjamin Jacob Dawson
+ *  Copyright (c) 2020 Benjamin Jacob Dawson
  *
  *      http://www.jakesden.com/corelibrary.html
  *
@@ -33,66 +33,66 @@ namespace Vulpine.Core.AI
 {
     /// <summary>
     /// This interface represents a class of genetic objects, known as genomes, which 
-    /// can be evolved to minimise some arbitary fitness funciton. All such genetic 
-    /// objects have a genotype, wheather implicit or explicit, that determins its 
-    /// phenotype, or how the organism looks and behaves. By copying, mutating, and 
-    /// recombining defrent genes a population may evolve to fit any given criteria. 
+    /// can be evolved to minimise some arbitary fitness funciton. By copying, mutating, 
+    /// and recombining defrent genes a population may evolve to fit any given criteria. 
     /// Note that the fitness funciton itself is not a part of the genome, as a single 
-    /// genome may be evolved to match diffrent or even changing criteria. Various 
-    /// algorythims exist to evolve genetic sturctors, and it is not nessary for a
-    /// genome to implement all geneitc operations. If a genome cannot preform a given 
-    /// operation, it should simply clone the genotype instead. 
+    /// genome may be evolved to match diffrent or even changing criteria. Originaly I
+    /// wrote these methods to return new genomes. However, given that many genomes will
+    /// be generated over the course of evolution, it is more effectent to update the
+    /// genomes in place. To combine two genomes for instance, it is nessary to copy
+    /// the first genome, then crossover the copy with the second genome.
     /// </summary>
-    /// <typeparam name="T">Genome Type</typeparam>
-    /// <remarks>Last Update: 2017-09-19</remarks>
-    public interface Genetic<T>
-    {
-        //T Copy();
-
+    /// <typeparam name="T">Genotype</typeparam>
+    /// <remarks>Last Update: 2020-01-24</remarks>
+    public interface Genetic<T> : IDisposable where T : Genetic<T>
+    {   
+        /// <summary>
+        /// This mehtod overrites the current genome with the given genome, producing
+        /// an exact copy. This allows genes to be copied from one generation to the
+        /// next, without having to reinstanciate the entire gene-pool. As with all
+        /// genetic operations, the parent genome is unaffected.
+        /// </summary>
+        /// <param name="genome">Parent genome to copy</param>
+        void Overwrite(T genome);
 
         /// <summary>
-        /// Compares the current genotype to the genotype of a diffrent
-        /// organism. The result is a positive real value that indicates
-        /// how siimilar the genotypes are. This is tipicaly used to
+        /// Causes the curent genome to mutate, becoming a new genome that is similar 
+        /// to, but distinct from, the original genome. How mutch the genome changes is
+        /// determined by the rate of mutation. A rate of zero should produce a near
+        /// identical copy, while a rate of one should generate a near random genome.
+        /// </summary>
+        /// <param name="rng">Random Number Generator used in preforming mutaitons</param>
+        /// <param name="rate">The degree to which the new genome should differ
+        /// from the original</param>
+        void Mutate(VRandom rng, double rate);
+
+        /// <summary>
+        /// Overites part of the current genome with the given genome, but not all,
+        /// producing a new genome that is a hybrid of the original genome and the
+        /// given genome. Note that this dose not nessarily need to be a 50-50 split.
+        /// As with all genetic operaitons, the parent genome is unaffected.
+        /// </summary>
+        /// <param name="rng">Random Number Generator used in preforming crossings</param>
+        /// <param name="genome">Parent genome to crossover</param>
+        void Crossover(VRandom rng, T genome);
+
+        /// <summary>
+        /// Compares the current genome to another genome. The result is a positive real 
+        /// value that indicates how siimilar the genomes are. This is tipicaly used to
         /// seperate a population of individules into species.
         /// </summary>
-        /// <param name="other">Organism for comparison</param>
-        /// <returns>Mesure of similarity</returns>
-        double Compare(T other);
+        /// <param name="genome">Other genome for comparison</param>
+        /// <returns>Measure of similarity</returns>
+        double Compare(T genome);
 
         /// <summary>
-        /// Clones the current organism with some random mutation of its
-        /// genotpye. The rate of mutaiton determins how dissimilar the
-        /// clone is from its parent. The exact meaning of this paramater
-        /// is determined by the implementing genome.
+        /// Spawns a new random genome, using the current genome as a prototype. This is
+        /// used to generate the initial populaiton to start the genetic algorythim. It
+        /// may also be used, on ocation, to introduce new genetic material into a
+        /// population that has stagnated.
         /// </summary>
-        /// <param name="rng">Random number generator</param>
-        /// <param name="rate">Rate of mutation</param>
-        /// <returns>A mutated organism</returns>
-        T Mutate(VRandom rng, double rate);
-
-        /// <summary>
-        /// Combines the genes of the curent organism with the genes of
-        /// another organism to create a brand new offspring. The idea is
-        /// that the child organism will possess trates from both its
-        /// parents, similar to sexual reproduction.
-        /// </summary>
-        /// <param name="rng">Random number generator</param>
-        /// <param name="mate">Mate of the curent organism</param>
-        /// <returns>The child of both organisms</returns>
-        T Combine(VRandom rng, T mate);
-
-        /// <summary>
-        /// Creates a new organism with more genes than its parent. This is 
-        /// diffrent from regular mutaiton, as the genotype becomes bigger, 
-        /// increasing the search space and opening new opertunites for 
-        /// diversification and improvment.
-        /// </summary>
-        /// <param name="rng">Random number generator</param>
-        /// <returns>An organism with an expanded genotype</returns>
-        T Expand(VRandom rng);
-
-
-        //double Fitness(object target);
+        /// <param name="rng">Random Number Generater used in spawning new genomes</param>
+        /// <returns>A brand new genome, based on the existing prototype</returns>
+        T SpawnRandom(VRandom rng);
     }
 }
