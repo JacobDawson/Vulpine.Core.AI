@@ -120,3 +120,33 @@ should remain set during propigation, to allow the network to conttiniously reff
 to the inputs. However, if input nurons are just another nuron, this means that the
 inputs themselves can be updated by the Network. This could lead to some intresting
 topologies, but then it might not be wise to let the network grow so unbounded.
+
+
+==============================================================================================
+
+
+Pruining Excess Topology:
+
+When we overwrite an existing network with the genome of another network, what we get
+is not a true clone of the other network. This is because (curently) we focus only on
+adding in the topology that's missing from the other network. However, the current
+network may have aditional topology that is not present in the soruce network. This
+topology is basicly left over. We need to deal with this topology in some manner. To
+that end, there are basicly two methods that I can think of, HARD and SOFT.
+
+In the SOFT method, we simply disable each excess axon. We don't need to touch the
+nurons, because the axons control the flow of information. In this case the excess
+topology is still there, it's just not contributing to the network. In this case,
+the network could re-discover this lost topology, by reactivating or adding aditonal
+axons. However, the topology wasn't relly lost, but left over from another organism
+that was supposed to have been replaced...
+
+In the HARD method, we go through the target network, deleting any Axon or Nuron
+not pressent in the source. This gives us the closest to a true copy that we can get.
+This also seems to be the best option for speciesization. Since the whole point of
+deviding genomes into species, is to protect unique topologies. If every organism
+has every other topology sored in it's junk DNA, we arn't relly doing that.
+
+The downside to the HARD method is that whenever we remove topology, we risk breaking
+the network. But because we copied the source topology before-hand, we should be
+reasonably shure that the sorce topology remains intact. 

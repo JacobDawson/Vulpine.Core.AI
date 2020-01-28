@@ -74,6 +74,10 @@ namespace Vulpine.Core.AI.Genetics
                 //disposes of the old popluaiton and generates a brand new one
                 if (pop[i] != null) pop[i].Dispose();
                 pop[i] = prototype.SpawnRandom(rng);
+
+                //gives a couple of mutaitons to further divercify the starting pool
+                pop[i].Mutate(rng, rate);
+                pop[i].Mutate(rng, rate);
             }
         }
 

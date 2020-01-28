@@ -6,6 +6,7 @@ using System.Text;
 using Vulpine.Core.Data;
 using Vulpine.Core.Data.Tables;
 using Vulpine.Core.Data.Lists;
+using Vulpine.Core.Data.Queues;
 
 using Vulpine.Core.Calc;
 using Vulpine.Core.Calc.RandGen;
@@ -16,15 +17,15 @@ namespace Vulpine.Core.AI.Nural
     public class NetworkAuto : Genetic<NetworkAuto>
     {
         //the standard deviation for new nodes and shifted nodes
-        private const double SD_NEW = 1.0;
-        private const double SD_SHIFT = 0.2;
+        private const double SD_NEW = 2.0;
+        private const double SD_SHIFT = 0.5;
 
         //what is the probablity that the network will expand when mutated
-        private const double P_EXPAND = 0.1;
+        private const double P_EXPAND = 0.2;
 
         //what is the probablity that a node will change activation 
         //functions when the network is mutated
-        private const double P_NODE = 0.1;
+        private const double P_NODE = 0.2;
 
         //indicates the maximum number of tries for random probing
         private const int MAX_TRY = 64;
@@ -250,11 +251,29 @@ namespace Vulpine.Core.AI.Nural
             return network;
         }
 
-        //NOTE: There is a flaw in the overwrite process, in that it dose not
-        //remove any nodes or edges from the overwritten network, so the network
-        //is not an exact duplicate of the target network.
-
         public void Overwrite(NetworkAuto genome)
+        {
+            //NOTE: Need to assert that the inputs and outputs match
+
+            this.axons.Clear();
+            this.nurons.Clear();
+
+            //used in itterating all the axons and nurons
+            var g_axons = genome.axons.ListItems();
+            var g_nurons = genome.nurons.ListItems();
+
+            foreach (Nuron n1 in g_nurons)
+            {
+                nurons.Overwrite(n1.Index, n1);
+            }
+
+            foreach (Axon a1 in g_axons)
+            {
+                axons.Overwrite(a1.Index, a1);
+            }
+        }
+
+        public void OverwriteAlt(NetworkAuto genome)
         {
             //used in itterating all the axons and nurons
             var g_axons = genome.axons.ListItems();
@@ -295,6 +314,43 @@ namespace Vulpine.Core.AI.Nural
                     a0 = new Axon(a1);
                     axons.Add(a0.Index, a0);
                 }
+            }
+
+            //uses a queue to mark certain nurons and axons for deletion
+            int tn = Math.Abs(nurons.Count - genome.nurons.Count);
+            int ta = Math.Abs(axons.Count - genome.axons.Count);
+
+            var ntrash = new DequeArray<Nuron>(tn);
+            var atrash = new DequeArray<Axon>(ta);
+
+            var t_axons = axons.ListItems();
+            var t_nurons = nurons.ListItems();
+
+            //marks the excess axons and nurons for deletion
+            foreach (Axon a1 in t_axons)
+            {
+                if (genome.axons.HasKey(a1.Index)) continue;
+                else atrash.PushFront(a1);
+            }
+
+            foreach (Nuron n1 in t_nurons)
+            {
+                if (genome.nurons.HasKey(n1.Index)) continue;
+                else ntrash.PushFront(n1);
+            }
+
+            //removes the excess axons and nurons
+            while (!atrash.Empty)
+            {
+                Axon del = atrash.PopFront();
+                axons.Remove(del.Index);
+            }
+
+            while (!ntrash.Empty)
+            {
+                Nuron del = ntrash.PopFront();
+                del.ClearData();
+                nurons.Remove(del.Index); 
             }
         }
 
