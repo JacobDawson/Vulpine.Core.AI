@@ -94,5 +94,14 @@ namespace Vulpine.Core.AI
         /// <param name="rng">Random Number Generater used in spawning new genomes</param>
         /// <returns>A brand new genome, based on the existing prototype</returns>
         T SpawnRandom(VRandom rng);
+
+        //void Initialise(VRandom rng);
+
+        //T FromPrototype();
+
+        //void Randomize(VRandom rng);
+
+        //T Clone();
+        
     }
 }

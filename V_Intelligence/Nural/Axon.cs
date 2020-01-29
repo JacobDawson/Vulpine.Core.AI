@@ -57,8 +57,9 @@ namespace Vulpine.Core.AI.Nural
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
+            int hash = GetHashCode();
 
-            sb.AppendFormat("Axon-{0:X8} ", source);
+            sb.AppendFormat("Axon-{0:X8} ", hash);
             sb.AppendFormat("{0:G6} ", weight);
             sb.Append(enabled ? "Enabled" : "Disabled");
 

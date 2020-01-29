@@ -53,6 +53,7 @@
     <Compile Include="Nural\Nuron.cs" />
     <Compile Include="Nural\NuronComp.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Test\TableSystem.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\V_DataStruk\V_DataStruk\V_DataStruk.csproj">

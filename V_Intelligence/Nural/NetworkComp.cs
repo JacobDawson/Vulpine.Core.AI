@@ -159,5 +159,16 @@ namespace Vulpine.Core.AI.Nural
         {
             //Shoudl probaly do somehting important here
         }
+
+
+        public void Initialise(VRandom rng)
+        {
+            throw new NotImplementedException();
+        }
+
+        public NetworkComp FromPrototype()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

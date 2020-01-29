@@ -50,9 +50,13 @@ namespace Vulpine.Core.AI.Nural
         /// <param name="outputs">Number of output nurons</param>
         public NetworkAuto(int inputs, int outputs)
         {
+            ////initialises the tables for the nurons and axons
+            //nurons = new TableOpen<Int32, Nuron>(256);
+            //axons = new TableOpen<Int32, Axon>(1024);
+
             //initialises the tables for the nurons and axons
-            nurons = new TableOpen<Int32, Nuron>(256);
-            axons = new TableOpen<Int32, Axon>(1024);
+            nurons = new TableSystem<Int32, Nuron>(256);
+            axons = new TableSystem<Int32, Axon>(1024);
 
             //creates arrays to remember the inputs and outputs
             this.inputs = new int[inputs];
@@ -237,6 +241,13 @@ namespace Vulpine.Core.AI.Nural
             }
         }
 
+        public NetworkAuto FromPrototype()
+        {
+            int ni = this.InSize;
+            int no = this.OutSize;
+            return new NetworkAuto(ni, no);
+        }
+
         public NetworkAuto SpawnRandom(VRandom rng)
         {
             int ni = this.InSize;
@@ -264,12 +275,16 @@ namespace Vulpine.Core.AI.Nural
 
             foreach (Nuron n1 in g_nurons)
             {
-                nurons.Overwrite(n1.Index, n1);
+                //nurons.Overwrite(n1.Index, n1);
+                Nuron temp = new Nuron(this, n1);
+                nurons.Add(temp.Index, temp);
             }
 
             foreach (Axon a1 in g_axons)
             {
-                axons.Overwrite(a1.Index, a1);
+                //axons.Overwrite(a1.Index, a1);
+                Axon temp = new Axon(a1);
+                axons.Add(temp.Index, temp);
             }
         }
 
