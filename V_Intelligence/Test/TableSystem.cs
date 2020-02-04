@@ -24,6 +24,47 @@ namespace Vulpine.Core.Data.Tables
             table = new Dictionary<K, E>(cap);
         }
 
+        ///// <summary>
+        ///// Constructs a new table, containing multiple entries. The number of
+        ///// buckets is automatically determined based on the number of entries.
+        ///// </summary>
+        ///// <param name="pairs">The entries into the table</param>
+        //public TableSystem(IEnumerable<KeyedItem<K, E>> pairs)
+        //{
+        //    //obtain the base capacity from the number of items
+        //    int cap = (int)(pairs.Count() * 1.25) + 10;
+
+        //    table = new Dictionary<K, E>(cap);
+
+        //    //adds the key-value pairs one at a time
+        //    foreach (var pair in pairs) Add(pair.Key, pair.Item);
+        //}
+
+        ///// <summary>
+        ///// Constructs a new table, containing multiple entries. The keys
+        ///// for the entries are derived from a separate key selector function.
+        ///// The number of buckets is automatically determined based on the
+        ///// number of entries.
+        ///// </summary>
+        ///// <param name="items">The items to be stored in the table</param>
+        ///// <param name="selector">A function to derive the keys for each
+        ///// item that is stored in the table</param>
+        //public TableSystem(IEnumerable<E> items, Func<E, K> selector)
+        //{
+        //    //obtain the base capacity from the number of items
+        //    int cap = (int)(items.Count() * 1.25) + 10;
+
+        //    table = new Dictionary<K, E>(cap);
+
+        //    //adds the key-value pairs one at a time
+        //    foreach (var item in items)
+        //    {
+        //        var key = selector.Invoke(item);
+        //        Add(key, item);
+        //    }
+        //}
+
+
         public override int Buckets
         {
             get { return -1; }

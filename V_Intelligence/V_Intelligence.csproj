@@ -41,7 +41,10 @@
     <Compile Include="Genetic2.cs" />
     <Compile Include="Genetics\EvolEventArgs.cs" />
     <Compile Include="Genetics\EvolMonogen.cs" />
+    <Compile Include="Genetics\EvolSpecies.cs" />
     <Compile Include="Genetics\Evolution.cs" />
+    <Compile Include="Genetics\Organism.cs" />
+    <Compile Include="Genetics\Species.cs" />
     <Compile Include="Nural\ActFunc.cs" />
     <Compile Include="NuralOld\Axon.cs" />
     <Compile Include="NuralOld\NetworkCPP.cs" />

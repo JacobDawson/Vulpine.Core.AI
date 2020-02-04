@@ -87,12 +87,23 @@ namespace ArtEvolver
             return network.Compare(genome.network);
         }
 
-        public CPPN SpawnRandom(VRandom rng)
-        {
-            //throw new NotImplementedException();
+        //public CPPN SpawnRandom(VRandom rng)
+        //{
+        //    //throw new NotImplementedException();
 
-            var next = network.SpawnRandom(rng);
-            return new CPPN(next);
+        //    var next = network.SpawnRandom(rng);
+        //    return new CPPN(next);
+        //}
+
+        public void Randomize(VRandom rng)
+        {
+            network.Randomize(rng);
+        }
+
+        public CPPN Clone()
+        {
+            NetworkAuto copy = network.Clone();
+            return new CPPN(copy);
         }
 
         public void Dispose()

@@ -161,12 +161,12 @@ namespace Vulpine.Core.AI.Nural
         }
 
 
-        public void Initialise(VRandom rng)
+        public void Randomize(VRandom rng)
         {
             throw new NotImplementedException();
         }
 
-        public NetworkComp FromPrototype()
+        public NetworkComp Clone()
         {
             throw new NotImplementedException();
         }

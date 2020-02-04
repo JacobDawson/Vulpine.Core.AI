@@ -85,23 +85,31 @@ namespace Vulpine.Core.AI
         /// <returns>Measure of similarity</returns>
         double Compare(T genome);
 
-        /// <summary>
-        /// Spawns a new random genome, using the current genome as a prototype. This is
-        /// used to generate the initial populaiton to start the genetic algorythim. It
-        /// may also be used, on ocation, to introduce new genetic material into a
-        /// population that has stagnated.
-        /// </summary>
-        /// <param name="rng">Random Number Generater used in spawning new genomes</param>
-        /// <returns>A brand new genome, based on the existing prototype</returns>
-        T SpawnRandom(VRandom rng);
+        ///// <summary>
+        ///// Spawns a new random genome, using the current genome as a prototype. This is
+        ///// used to generate the initial populaiton to start the genetic algorythim. It
+        ///// may also be used, on ocation, to introduce new genetic material into a
+        ///// population that has stagnated.
+        ///// </summary>
+        ///// <param name="rng">Random Number Generater used in spawning new genomes</param>
+        ///// <returns>A brand new genome, based on the existing prototype</returns>
+        //T SpawnRandom(VRandom rng);
 
         //void Initialise(VRandom rng);
 
         //T FromPrototype();
 
-        //void Randomize(VRandom rng);
+        /// <summary>
+        /// Randomizes the curent genome. This differs from mutation as this completly
+        /// changes the genome, where as a mutated genome is still somewhat similar
+        /// to it's parent genome. This is tipicaly used to initialise a population
+        /// from a single genitor. It can also be used to introudce new genteci material
+        /// into a population that has stagnated.
+        /// </summary>
+        /// <param name="rng">Random Number Generator used for randomizing</param>
+        void Randomize(VRandom rng);
 
-        //T Clone();
+        T Clone();
         
     }
 }

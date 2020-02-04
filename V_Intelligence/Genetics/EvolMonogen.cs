@@ -61,29 +61,26 @@ namespace Vulpine.Core.AI.Genetics
 
         public void Initialise(T prototype)
         {
-            ////creates a special genitor genome to use between generations
-            //if (genitor != null) genitor.Dispose();
-            //genitor = prototype.SpawnRandom(rng);
+            topfit = Double.NegativeInfinity;
+            gencount = 0;
 
-            ////creates a special genitor genome to use between generations
-            //if (topspec != null) topspec.Dispose();
-            //topspec = prototype.SpawnRandom(rng);
+            //uses the prototype as the current top species
+            if (topspec != null) topspec.Dispose();
+            topspec = prototype.Clone();    
 
             for (int i = 0; i < pop.Length; i++)
             {
-                //disposes of the old popluaiton and generates a brand new one
+                //fills the populaiton with clones of the prototype
                 if (pop[i] != null) pop[i].Dispose();
-                pop[i] = prototype.SpawnRandom(rng);
+                pop[i] = prototype.Clone();
 
-                //gives a couple of mutaitons to further divercify the starting pool
+                //randomizes the population
+                pop[i].Randomize(rng);
+
+                //adds a couple of mutaitons for greater divercity
                 pop[i].Mutate(rng, rate);
                 pop[i].Mutate(rng, rate);
-            }
-
-            //creates an arbitrary specimin to serve as the top species
-            if (topspec != null) topspec.Dispose();
-            topspec = prototype.SpawnRandom(rng);
-            topfit = Double.NegativeInfinity;
+            }           
         }
 
         public void Evolve()
@@ -140,11 +137,11 @@ namespace Vulpine.Core.AI.Genetics
             container.Overwrite(topspec);
         }
 
-        private void SetTopSpec(T genome)
-        {
-            if (topspec == null) topspec = genome.SpawnRandom(rng);
-            topspec.Overwrite(genome);
-        }
+        //private void SetTopSpec(T genome)
+        //{
+        //    if (topspec == null) topspec = genome.SpawnRandom(rng);
+        //    topspec.Overwrite(genome);
+        //}
 
 
     }
