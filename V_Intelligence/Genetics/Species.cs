@@ -32,7 +32,7 @@ namespace Vulpine.Core.AI.Genetics
 
         //stores the cut-off ages for young and old species
         public const int YOUNG = 10;
-        public const int OLD = 10;
+        public const int OLD = 15;
 
         //NOTE: The fitness sharing code assumes that fitness is always positive. 
 
@@ -193,7 +193,8 @@ namespace Vulpine.Core.AI.Genetics
 
             ////determins the number of creatures left alive
             //int nalive = (int)Math.Floor(drate * members.Count);
-            //nalive = members.Count - nalive;
+            //nalive = members.Count - (nalive + 1);
+            //if (nalive < 1) nalive = 1;
 
             //determins the number of creatures that should die
             double dead = drate * members.Count;
@@ -223,6 +224,13 @@ namespace Vulpine.Core.AI.Genetics
 
         internal bool Extention()
         {
+            //if there are no members left, we are extenct by definition
+            if (members.Count == 0)
+            {
+                pop = null;
+                return true;
+            }
+
             //if the species is still young or inovating (keep alive)
             if (age < YOUNG) return false;
             if ((age - invo) < OLD) return false;

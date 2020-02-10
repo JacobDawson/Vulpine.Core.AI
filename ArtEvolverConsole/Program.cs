@@ -30,9 +30,9 @@ namespace ArtEvolverConsole
 
         static void Main(string[] args)
         {
-            RunEvolution2();
+            //RunEvolution2();
             //GeneratePictures();
-            //TestGennetics3();
+            TestGennetics4();
             //SortTest();
 
             Console.WriteLine("Press Any Key To Continue... ");
@@ -143,6 +143,7 @@ namespace ArtEvolverConsole
                 Console.WriteLine();
                 Console.WriteLine("Generation " + i + ": " + nodes + " " + axons + " " + fit);
                 Console.WriteLine("Num Species: " + evolver.NumSpecies);
+                Console.WriteLine("Threshold: " + evolver.Threshold);
 
                 //we cannot have more species than there are indvidual organisms
                 if (evolver.NumSpecies > 100) throw new Exception();
@@ -263,7 +264,7 @@ namespace ArtEvolverConsole
                 Console.WriteLine("Generation " + i + ": " + fitness);
                 Console.WriteLine(best);
 
-                Thread.Sleep(500);
+                //Thread.Sleep(500);
             }
         }
 
@@ -286,7 +287,7 @@ namespace ArtEvolverConsole
                 return dist;
             };
 
-            EvolSpecies<GenString> evol = new EvolSpecies<GenString>(100, 0.1, fit);
+            EvolSpecies<GenString> evol = new EvolSpecies<GenString>(1000, 0.1, fit);
             evol.Initialise(best);
 
             for (int i = 0; i < MAX_GEN; i++)
@@ -303,6 +304,46 @@ namespace ArtEvolverConsole
                 Console.WriteLine(best);
 
                 //Thread.Sleep(500);
+            }
+        }
+
+        public static void TestGennetics4()
+        {
+            GenString2 target = new GenString2(
+                "Twas brillig, and the slithy toves did gyer and gimble in the wabe.");
+            GenString2 best = new GenString2("Hello");
+
+            Console.WriteLine("Target: " + target);
+
+            Fitness<GenString2> fit = delegate(GenString2 gs)
+            {
+                double dist = gs.Distance(target);
+                //return 1.0 / (dist + 1.0);
+                //return -dist;
+
+                dist = (5000.0 - dist) / 5000.0;
+                if (dist < 0.0001) dist = 0.0001;
+                return dist;
+            };
+
+            EvolSpecies<GenString2> evol = new EvolSpecies<GenString2>(1000, 0.1, fit);
+            evol.Initialise(best);
+
+            for (int i = 0; i < MAX_GEN; i++)
+            {
+                evol.Evolve();
+                evol.GetTopSpec(best);
+
+                double fitness = evol.TopFitness;
+                int species = evol.NumSpecies;
+
+                Console.WriteLine();
+                Console.WriteLine("Generation " + i + ": " + fitness);
+                Console.WriteLine("Num Species: " + species);
+                Console.WriteLine("Threshold: " + evol.Threshold);
+                Console.WriteLine(best);
+
+                Thread.Sleep(500);
             }
         }
 

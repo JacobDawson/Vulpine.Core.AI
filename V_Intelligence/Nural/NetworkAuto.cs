@@ -715,7 +715,7 @@ namespace Vulpine.Core.AI.Nural
         }
 
 
-        public double Compare(NetworkAuto genome)
+        public double Compare1(NetworkAuto genome)
         {
             //used in computing the distance
             int match = 0;
@@ -766,7 +766,7 @@ namespace Vulpine.Core.AI.Nural
         }
 
 
-        public double Compare2(NetworkAuto genome)
+        public double Compare(NetworkAuto genome)
         {
             //used in computing the distance
             int match = 0;

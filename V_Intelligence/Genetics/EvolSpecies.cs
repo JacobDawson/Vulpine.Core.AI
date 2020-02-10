@@ -48,10 +48,10 @@ namespace Vulpine.Core.AI.Genetics
         private bool crossover = true;
 
         //threshold for inclusion in a species (6.0) (6.86)
-        private double compat_tresh = 12.0;
-        private double compat_mod = 0.2;
+        private double compat_tresh = 400.0;
+        private double compat_mod = 1.0; //0.2
 
-        private int species_target = 10;
+        private int species_target; // = 30; //10
 
         public EvolSpecies(int popsize, double rate, Fitness<T> fitf)
         {        
@@ -70,6 +70,9 @@ namespace Vulpine.Core.AI.Genetics
 
             generation = 0;
             champ = 0;
+
+            //species_target = (int)Math.Sqrt(popsize) + 1;
+            species_target = 10;
         }
 
         #region Evolution Implementation...
@@ -91,6 +94,11 @@ namespace Vulpine.Core.AI.Genetics
         public int NumSpecies
         {
             get { return species.Count; }
+        }
+
+        public double Threshold
+        {
+            get { return compat_tresh; }
         }
 
 
