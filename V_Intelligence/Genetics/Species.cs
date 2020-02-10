@@ -139,6 +139,7 @@ namespace Vulpine.Core.AI.Genetics
             {          
                 proto = index;
                 max_fit = fit;
+                invo = age;
             }
 
             //adds the member to the species

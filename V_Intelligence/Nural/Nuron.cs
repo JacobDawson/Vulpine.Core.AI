@@ -370,6 +370,9 @@ namespace Vulpine.Core.AI.Nural
                 case ActFunc.Sinc:
                     value = VMath.Sinc(value); break;
             }
+
+            //prevents propagating NaNs
+            if (value.IsNaN()) value = 0.0;
         }
 
         #endregion ////////////////////////////////////////////////////////////////////

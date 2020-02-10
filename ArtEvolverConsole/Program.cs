@@ -117,7 +117,7 @@ namespace ArtEvolverConsole
             Texture txt = new Interpolent(img, Intpol.Nearest);
 
             var fitness = BuildFitness(txt);
-            EvolSpecies<CPPN> evolver = new EvolSpecies<CPPN>(50, 0.1, fitness);
+            EvolSpecies<CPPN> evolver = new EvolSpecies<CPPN>(100, 0.1, fitness);
             CPPN best = new CPPN();
             
 
@@ -143,6 +143,9 @@ namespace ArtEvolverConsole
                 Console.WriteLine();
                 Console.WriteLine("Generation " + i + ": " + nodes + " " + axons + " " + fit);
                 Console.WriteLine("Num Species: " + evolver.NumSpecies);
+
+                //we cannot have more species than there are indvidual organisms
+                if (evolver.NumSpecies > 100) throw new Exception();
 
                 evolver.Evolve();
                 evolver.GetTopSpec(best);

@@ -27,11 +27,16 @@ namespace Vulpine.Core.AI.Nural
         //functions when the network is mutated
         private const double P_NODE = 0.2;
 
+        //the probability that we toggel an axon during mutation
         public const double P_TOGGEL = 0.1;
+
+        //the probablity that we prefrom liniar crossover
+        public const double P_Linear = 0.25;
 
         //constants used in comparing networks
         public const double C0 = 2.0;
-        public const double C1 = 1.0;
+        public const double C1 = 2.0;
+        public const double C2 = 1.0;
 
         //indicates the maximum number of tries for random probing
         private const int MAX_TRY = 64;
@@ -645,8 +650,70 @@ namespace Vulpine.Core.AI.Nural
 
         public void Crossover(VRandom rng, NetworkAuto genome)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+
+            //determins weather or not to do liniar crossover
+            bool liniar = rng.RandBool(P_Linear);
+            double a = rng.NextDouble();
+
+            //lists all the axons and nurons in the mate
+            var ittr1 = genome.nurons.ListItems();
+            var ittr2 = genome.axons.ListItems();
+
+            foreach (Nuron n in ittr1)
+            {
+                //obtains the matching child nuron
+                Nuron nc = nurons.GetValue(n.Index);
+
+                if (nc == null)
+                {
+                    //adds the missing nuron
+                    nc = new Nuron(this, n);
+                    nurons.Add(nc.Index, nc);
+                }
+                else
+                {
+                    //determins the activation based on crossover
+                    bool cross = rng.RandBool();
+                    if (cross) nc.Func = n.Func;
+                }
+            }
+
+            foreach (Axon ax in ittr2)
+            {
+                //obtains the matching child axon
+                Axon axc = axons.GetValue(ax.Index);
+
+                if (axc == null)
+                {
+                    //adds the missing axon, but disabled
+                    axc = new Axon(ax);
+                    axc.Enabled = false;
+                    axons.Add(axc.Index, axc);
+                }
+                else
+                {
+                    if (liniar)
+                    {
+                        //chooses a value between the two weights
+                        double weight = axc.Weight * (1.0 - a);
+                        axc.Weight = weight + (ax.Weight * a);
+                    }
+                    else
+                    {
+                        //determins the new weight based on crossover
+                        bool cross = rng.RandBool();
+                        if (cross) axc.Weight = ax.Weight;
+                    }
+
+                    //if the axon is present in both networks, it has a
+                    //strong chance of becoming enabled
+                    bool en = ax.Enabled && axc.Enabled;
+                    axc.Enabled = en || rng.RandBool(0.25);
+                }
+            }
         }
+
 
         public double Compare(NetworkAuto genome)
         {
@@ -654,10 +721,6 @@ namespace Vulpine.Core.AI.Nural
             int match = 0;
             int disjoint = 0;
             double wbar = 0.0;
-
-            //QUESTION: Should disabled axons be considered as matching or disjoint?
-            
-            //IDEA: We should consider how the nodes affect the networks.
 
             //lists the axons in each of the networks
             var ittr1 = this.axons.ListItems();
@@ -698,6 +761,81 @@ namespace Vulpine.Core.AI.Nural
             //couputes the distance for specisation
             double dist = (C0 * disjoint) / (double)size;
             dist += C1 * (wbar / (double)match);
+
+            return dist;
+        }
+
+
+        public double Compare2(NetworkAuto genome)
+        {
+            //used in computing the distance
+            int match = 0;
+            int disjoint = 0;
+            double wbar = 0.0;
+
+            //used in comparing node counts
+            int ndiff = 0;
+            int nmatch = 0;
+
+            //lists the nurons in each of the networks
+            var ittr1 = this.nurons.ListItems();
+
+            foreach (Nuron n1 in ittr1)
+            {
+                //tries to find the matching nuron
+                Nuron n2 = genome.nurons.GetValue(n1.Index);
+                if (n2 == null) continue;
+
+                //counts the nodes that differ in activation
+                if (n2.Func != n1.Func) ndiff += 1;
+                nmatch += 1;
+            }
+
+            //lists the axons in each of the networks
+            var ittr3 = this.axons.ListItems();
+            var ittr4 = genome.axons.ListItems();
+
+            foreach (Axon ax1 in ittr3)
+            {
+                //tries to find the matching axon
+                Axon ax2 = genome.axons.GetValue(ax1.Index);
+
+                if (ax2 == null)
+                {
+                    //counts the disjoint axons
+                    disjoint += 1;
+                }
+                else if (!(ax1.Enabled && ax2.Enabled))
+                {
+                    //considers disabled axons to be disjoint
+                    disjoint += 1;
+                }
+                else
+                {
+                    //computes the distance bteween the weights
+                    double w1 = ax1.Weight;
+                    double w2 = ax2.Weight;
+
+                    wbar += Math.Abs(w1 - w2);
+                    match += 1;
+                }
+            }
+
+            foreach (Axon ax1 in ittr4)
+            {
+                //counts the disjoint edges from the other network
+                bool test = this.axons.HasKey(ax1.Index);
+                if (!test) disjoint += 1;
+            }
+
+            //determins the size of the larger network
+            int size = Math.Max(this.NumAxons, genome.NumAxons);
+            size = (size > 20) ? size - 20 : 1;
+
+            //couputes the distance for specisation
+            double dist = (C0 * ndiff) / (double)nmatch; 
+            dist += (C1 * disjoint) / (double)size;
+            dist += C2 * (wbar / (double)match);
 
             return dist;
         }

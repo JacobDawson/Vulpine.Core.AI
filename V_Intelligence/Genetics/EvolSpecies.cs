@@ -11,7 +11,10 @@ namespace Vulpine.Core.AI.Genetics
     public class EvolSpecies<T> where T : Genetic<T>
     {
         //Determins how many creatures die in each generation (0.25)
-        public const double DeathRate = 0.5; 
+        public const double DeathRate = 0.8;
+
+        public const double CrossRate = 0.25;
+        public const double TransSpecies = 0.1;
 
 
         //uses a random number generator to propell evolution
@@ -42,11 +45,11 @@ namespace Vulpine.Core.AI.Genetics
         private double rate;
 
         //determins if crossover is allowed
-        private bool crossover = false;
+        private bool crossover = true;
 
         //threshold for inclusion in a species (6.0) (6.86)
-        private double compat_tresh = 6.0;
-        private double compat_mod = 0.3;
+        private double compat_tresh = 12.0;
+        private double compat_mod = 0.2;
 
         private int species_target = 10;
 
@@ -265,27 +268,19 @@ namespace Vulpine.Core.AI.Genetics
                     if (deadpool.Count == 0) break;
                     Organism<T> rep = deadpool.Pop();
 
-                    //obtains a pair of random genomes for mating
-                    T mom = spec.GetRandMember(rng).Genome;
-                    T dad = spec.GetRandMember(rng).Genome;
-
-                    //NOTE: I feel like this could be better
-
-                    //creates a new offspring in scratch
-                    scratch.Overwrite(mom);
-                    if (crossover) scratch.Crossover(rng, dad);
-                    scratch.Mutate(rng, rate);
+                    //handels the generation of offspring
+                    Procreate(spec, rep, scratch);
 
                     //calculates fitness and updates the organism
                     double fitness = fitf(scratch);
                     rep.Update(scratch, fitness);
 
                     //updates the champ if this new creature is better
-                    if (fitness > pop[champ].TrueFit)
-                        champ = rep.Index;
+                    if (fitness > pop[champ].TrueFit) champ = rep.Index;
 
                     //the organisim is born again
                     babies.Push(rep);
+                    rep.Marked = false;
                 }
             }
 
@@ -303,13 +298,55 @@ namespace Vulpine.Core.AI.Genetics
                 double fitness = fitf(scratch);
                 rep.Update(scratch, fitness);
 
+                //updates the champ if this new creature is better
+                if (fitness > pop[champ].TrueFit) champ = rep.Index;
+
                 //the organisim is born again
                 babies.Push(rep);
+                rep.Marked = false;
             }
         }
 
+        private void Procreate(Species<T> spec, Organism<T> rep, T scratch)
+        {
+            //obtains a pair of random genomes for mating
+            T mom = spec.GetRandMember(rng).Genome;
+
+            //creates a new offspring in scratch
+            scratch.Overwrite(mom);
+
+            if (crossover && rng.RandBool(CrossRate))
+            {
+                if (rng.RandBool(TransSpecies))
+                {
+                    //obtains the best dad from a random species
+                    int sindex = rng.RandInt(species.Count);
+                    T dad = species[sindex].Prototype.Genome;
+                    scratch.Crossover(rng, dad);
+
+                    //Console.WriteLine("Interspecies Crossover!");
+                    Console.Write("I");
+                }
+                else
+                {
+                    //obtains a random dad from the curent species
+                    T dad = spec.GetRandMember(rng).Genome;
+                    scratch.Crossover(rng, dad);
+                }
+            }
+
+            //mutates the offspring
+            scratch.Mutate(rng, rate);
+        }
+
+        //NOTE: I think babies should be a priority queue instead, that way,
+        //the best preforming creatures are sorted into species first.
+
         private void Speciate()
         {
+            //Console.WriteLine("Num Babies: " + babies.Count);
+            Console.Write("\n Num Babies: " + babies.Count); 
+
             while (babies.Count > 0)
             {
                 Organism<T> baby = babies.Pop();
@@ -337,7 +374,8 @@ namespace Vulpine.Core.AI.Genetics
                     var myspec = new Species<T>(this, baby);
                     species.Add(myspec);
 
-                    Console.WriteLine("New Species Created!");
+                    //Console.WriteLine("New Species Created!");
+                    Console.Write("\n New Species Created!");
                 }
             }
         }
@@ -345,7 +383,7 @@ namespace Vulpine.Core.AI.Genetics
         private void AdjustThreshold()
         {
             //keep the threshhold stable for first few itterations
-            if (generation < 2) return;
+            if (generation < 5) return;
 
             //adjust threshold as needed to reach target
             if (species.Count < species_target) 
@@ -363,8 +401,11 @@ namespace Vulpine.Core.AI.Genetics
 
         internal void MarkForDeath(int index)
         {
-            pop[index].Marked = true;
-            deadpool.Push(pop[index]);
+            if (!pop[index].Marked)
+            {
+                pop[index].Marked = true;
+                deadpool.Push(pop[index]);
+            }
         }
     }
 }
