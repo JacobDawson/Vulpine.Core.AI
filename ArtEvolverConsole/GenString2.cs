@@ -72,7 +72,7 @@ namespace ArtEvolverConsole
             this.mystr = genome.mystr;
         }
 
-        public void Mutate(VRandom rng, double rate)
+        public void Mutate1(VRandom rng, double rate)
         {
             if (rng.RandBool(P_Insert * rate))
             {
@@ -89,6 +89,118 @@ namespace ArtEvolverConsole
                 int index = rng.RandInt(0, temp.Length);
                 bool add = rng.RandBool();
                 int c = (int)temp[index] + (add ? 1 : -1);
+
+                //makes shure the resulting character is valid
+                if (c < 32) c = 32;
+                if (c > 126) c = 126;
+                temp[index] = (char)c;
+
+                //sets the new mutated string
+                mystr = new String(temp);
+            }
+        }
+
+        public void Mutate2(VRandom rng, double rate)
+        {
+            if (rng.RandBool(P_Insert * rate))
+            {
+                //selects a random character in the ASCII range
+                int c = rng.RandInt(32, 127);
+                mystr = mystr + (char)c;
+            }
+            else
+            {
+                //converts the string to a char array
+                char[] temp = mystr.ToCharArray();
+
+                for (int i = 0; i < temp.Length; i++)
+                {
+                    //alters each character with a chance of 'rate'
+                    if (!rng.RandBool(rate)) continue;
+
+                    //increments or decrements the character
+                    bool add = rng.RandBool();
+                    int c = (int)temp[i] + (add ? 1 : -1);
+
+                    //makes shure the resulting character is valid
+                    if (c < 32) c = 32;
+                    if (c > 126) c = 126;
+                    temp[i] = (char)c;
+                }
+
+                //sets the new mutated string
+                mystr = new String(temp);
+            }
+        }
+
+        public void Mutate3(VRandom rng, double rate)
+        {
+            if (rng.RandBool(P_Insert * rate))
+            {
+                //selects a random character in the ASCII range
+                int c = rng.RandInt(32, 127);
+                mystr = mystr + (char)c;
+            }
+            else
+            {
+                //converts the string to a char array
+                char[] temp = mystr.ToCharArray();
+
+                //increments or decrements a random character
+                int index = rng.RandInt(0, temp.Length);
+                int shift = rng.RandInt(-9, 9);
+                int c = (int)temp[index] + shift;
+
+                //makes shure the resulting character is valid
+                if (c < 32) c = 32;
+                if (c > 126) c = 126;
+                temp[index] = (char)c;
+
+                //sets the new mutated string
+                mystr = new String(temp);
+            }
+        }
+
+        public void Mutate4(VRandom rng, double rate)
+        {
+            if (rng.RandBool(P_Insert * rate))
+            {
+                //selects a random character in the ASCII range
+                int c = rng.RandInt(32, 127);
+                mystr = mystr + (char)c;
+            }
+            else
+            {
+                //converts the string to a char array
+                char[] temp = mystr.ToCharArray();
+
+                //increments or decrements a random character
+                int index = rng.RandInt(0, temp.Length);
+                int c = rng.RandInt(32, 127); 
+                temp[index] = (char)c;
+
+                //sets the new mutated string
+                mystr = new String(temp);
+            }
+        }
+
+        public void Mutate(VRandom rng, double rate)
+        {
+            if (rng.RandBool(P_Insert * rate))
+            {
+                //selects a random character in the ASCII range
+                int c = rng.RandInt(32, 127);
+                mystr = mystr + (char)c;
+            }
+            else
+            {
+                //converts the string to a char array
+                char[] temp = mystr.ToCharArray();
+
+                //increments or decrements a random character
+                int index = rng.RandInt(0, temp.Length);
+                int shift = (int)(rng.RandGauss() * 5.0);
+                int c = (int)temp[index] + shift;
 
                 //makes shure the resulting character is valid
                 if (c < 32) c = 32;

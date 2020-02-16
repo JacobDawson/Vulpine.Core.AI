@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using Vulpine.Core.Data;
+using Vulpine.Core.Data.Heeps;
+
 using Vulpine.Core.Calc;
 using Vulpine.Core.Calc.RandGen;
 
@@ -14,7 +17,7 @@ namespace Vulpine.Core.AI.Genetics
         public const double DeathRate = 0.8;
 
         public const double CrossRate = 0.25;
-        public const double TransSpecies = 0.1;
+        public const double TransSpecies = 0.02;
 
 
         //uses a random number generator to propell evolution
@@ -33,7 +36,7 @@ namespace Vulpine.Core.AI.Genetics
         private Stack<Organism<T>> deadpool;
 
         //keeps track of new organims that have been born
-        private Stack<Organism<T>> babies;
+        private Heep<Double, Organism<T>> babies;
 
         //stores the index of the best preforming individual
         private int champ;
@@ -48,8 +51,12 @@ namespace Vulpine.Core.AI.Genetics
         private bool crossover = true;
 
         //threshold for inclusion in a species (6.0) (6.86)
-        private double compat_tresh = 400.0;
-        private double compat_mod = 1.0; //0.2
+        private double compat_tresh = 2.0;
+        private double compat_mod = 0.1; //0.2
+
+        ////use these settings for evolving genetic strings in test 
+        //private double compat_tresh = 400.0;
+        //private double compat_mod = 1.0;
 
         private int species_target; // = 30; //10
 
@@ -66,16 +73,16 @@ namespace Vulpine.Core.AI.Genetics
             int death = (int)(popsize * DeathRate) + 1;
 
             this.deadpool = new Stack<Organism<T>>(death);
-            this.babies = new Stack<Organism<T>>(death);
+            this.babies = new HeepArray<Double, Organism<T>>(death, true);
 
             generation = 0;
             champ = 0;
 
             //species_target = (int)Math.Sqrt(popsize) + 1;
-            species_target = 10;
+            species_target = 20; //20
         }
 
-        #region Evolution Implementation...
+        
 
         public int Generaton
         {
@@ -102,6 +109,10 @@ namespace Vulpine.Core.AI.Genetics
         }
 
 
+
+
+        #region Evolution Implementation...
+
         public void Initialise(T prototype)
         {
             //throw new NotImplementedException();
@@ -119,7 +130,7 @@ namespace Vulpine.Core.AI.Genetics
                 //creates a new organism with the measured fitness
                 double fitness = fitf(genome);
                 pop[i] = new Organism<T>(genome, i, fitness);
-                babies.Push(pop[i]);
+                babies.Add(fitness, pop[i]);
 
                 //updates the champ if this new creature is better
                 if (fitness > pop[champ].TrueFit) champ = i;
@@ -135,6 +146,19 @@ namespace Vulpine.Core.AI.Genetics
 
             T genome = pop[champ].Genome;
             container.Overwrite(genome);
+        }
+
+        /// <summary>
+        /// Obtains the prototype of a randomly slected species. By evaluating
+        /// diffrent species, and not just the best preforming organism, we can
+        /// tell if the popluation is remaning homogonous or diversifying.
+        /// </summary>
+        /// <param name="container">A container to store the genome</param>
+        public void GetRandProto(T container)
+        {
+            int index = rng.RandInt(species.Count);
+            T proto = species[index].Prototype.Genome;
+            container.Overwrite(proto);
         }
 
         public void Evolve()
@@ -287,7 +311,7 @@ namespace Vulpine.Core.AI.Genetics
                     if (fitness > pop[champ].TrueFit) champ = rep.Index;
 
                     //the organisim is born again
-                    babies.Push(rep);
+                    babies.Add(fitness, rep);
                     rep.Marked = false;
                 }
             }
@@ -310,18 +334,15 @@ namespace Vulpine.Core.AI.Genetics
                 if (fitness > pop[champ].TrueFit) champ = rep.Index;
 
                 //the organisim is born again
-                babies.Push(rep);
+                babies.Add(fitness, rep);
                 rep.Marked = false;
             }
         }
 
         private void Procreate(Species<T> spec, Organism<T> rep, T scratch)
         {
-            //obtains a pair of random genomes for mating
-            T mom = spec.GetRandMember(rng).Genome;
-
-            //creates a new offspring in scratch
-            scratch.Overwrite(mom);
+            Organism<T> mom = spec.GetRandMember(rng);
+            Organism<T> dad = null;
 
             if (crossover && rng.RandBool(CrossRate))
             {
@@ -329,35 +350,45 @@ namespace Vulpine.Core.AI.Genetics
                 {
                     //obtains the best dad from a random species
                     int sindex = rng.RandInt(species.Count);
-                    T dad = species[sindex].Prototype.Genome;
-                    scratch.Crossover(rng, dad);
+                    dad = species[sindex].Prototype;
 
-                    //Console.WriteLine("Interspecies Crossover!");
-                    Console.Write("I");
+                    Console.Write("T");
                 }
                 else
                 {
                     //obtains a random dad from the curent species
-                    T dad = spec.GetRandMember(rng).Genome;
-                    scratch.Crossover(rng, dad);
+                    dad = spec.GetRandMember(rng);
                 }
+
+                if (mom.TrueFit > dad.TrueFit)
+                {
+                    //swaps the parents if mom is better than dad
+                    Organism<T> temp = dad;
+                    dad = mom;
+                    mom = dad;
+                }
+
+                //creates a new offspring from both parents
+                scratch.Overwrite(dad.Genome);
+                scratch.Crossover(rng, mom.Genome);
+                scratch.Mutate(rng, rate);
             }
-
-            //mutates the offspring
-            scratch.Mutate(rng, rate);
+            else
+            {
+                //creates a mutated offspring from the single parent
+                scratch.Overwrite(mom.Genome);
+                scratch.Mutate(rng, rate);
+            }
         }
-
-        //NOTE: I think babies should be a priority queue instead, that way,
-        //the best preforming creatures are sorted into species first.
 
         private void Speciate()
         {
             //Console.WriteLine("Num Babies: " + babies.Count);
-            Console.Write("\n Num Babies: " + babies.Count); 
+            Console.Write("\n Num Babies: " + babies.Count);
 
             while (babies.Count > 0)
             {
-                Organism<T> baby = babies.Pop();
+                Organism<T> baby = babies.Dequeue();
                 bool found = false;
 
                 foreach (var spec in species)

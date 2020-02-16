@@ -35,8 +35,7 @@ namespace Vulpine.Core.AI.Nural
 
         //constants used in comparing networks
         public const double C0 = 2.0;
-        public const double C1 = 2.0;
-        public const double C2 = 1.0;
+        public const double C1 = 1.0;
 
         //indicates the maximum number of tries for random probing
         private const int MAX_TRY = 64;
@@ -302,30 +301,8 @@ namespace Vulpine.Core.AI.Nural
 
         public NetworkAuto Clone()
         {
-            //int ni = this.InSize;
-            //int no = this.OutSize;
-
-            //NetworkAuto target = new NetworkAuto(ni, no);
-            //target.Overwrite(this);
-
-            //return target;
-
             //calls the copy constructor, passing itself
             return new NetworkAuto(this);
-        }
-
-        public NetworkAuto SpawnRandom(VRandom rng)
-        {
-            int ni = this.InSize;
-            int no = this.OutSize;
-
-            //creates a new network with the same number of ins and outs
-            NetworkAuto network = new NetworkAuto(ni, no);
-
-            //initalises the new network to a radom state
-            network.Initialise();
-
-            return network;
         }
 
         public void Randomize(VRandom rng)
@@ -341,33 +318,33 @@ namespace Vulpine.Core.AI.Nural
             }
         }
 
-        //public void Overwrite(NetworkAuto genome)
-        //{
-        //    //NOTE: Need to assert that the inputs and outputs match
-
-        //    this.axons.Clear();
-        //    this.nurons.Clear();
-
-        //    //used in itterating all the axons and nurons
-        //    var g_axons = genome.axons.ListItems();
-        //    var g_nurons = genome.nurons.ListItems();
-
-        //    foreach (Nuron n1 in g_nurons)
-        //    {
-        //        //nurons.Overwrite(n1.Index, n1);
-        //        Nuron temp = new Nuron(this, n1);
-        //        nurons.Add(temp.Index, temp);
-        //    }
-
-        //    foreach (Axon a1 in g_axons)
-        //    {
-        //        //axons.Overwrite(a1.Index, a1);
-        //        Axon temp = new Axon(a1);
-        //        axons.Add(temp.Index, temp);
-        //    }
-        //}
-
         public void Overwrite(NetworkAuto genome)
+        {
+            //NOTE: Need to assert that the inputs and outputs match
+
+            this.axons.Clear();
+            this.nurons.Clear();
+
+            //used in itterating all the axons and nurons
+            var g_axons = genome.axons.ListItems();
+            var g_nurons = genome.nurons.ListItems();
+
+            foreach (Nuron n1 in g_nurons)
+            {
+                //nurons.Overwrite(n1.Index, n1);
+                Nuron temp = new Nuron(this, n1);
+                nurons.Add(temp.Index, temp);
+            }
+
+            foreach (Axon a1 in g_axons)
+            {
+                //axons.Overwrite(a1.Index, a1);
+                Axon temp = new Axon(a1);
+                axons.Add(temp.Index, temp);
+            }
+        }
+
+        public void Overwrite2(NetworkAuto genome)
         {
             //used in itterating all the axons and nurons
             var g_axons = genome.axons.ListItems();
@@ -380,8 +357,8 @@ namespace Vulpine.Core.AI.Nural
 
                 if (n0 != null)
                 {
-                    //copies the genome data if it finds a match
-                    n0.Func = n1.Func;
+                    ////copies the genome data if it finds a match
+                    //n0.Func = n1.Func;
                 }
                 else
                 {
@@ -460,114 +437,35 @@ namespace Vulpine.Core.AI.Nural
 
         }
 
-        public void Mutate1(VRandom rng, double rate)
+        //In this method we assume a standard mutation rate of 1.0;
+        public void Mutate(VRandom rng, double rate)
         {
-            //clamps the rate to be between zero and one
-            rate = VMath.Clamp(rate);
+            //makes shure the rate is positive
+            rate = Math.Abs(rate);
 
-            //expands the size of the network if nessary
-            if (rng.RandBool(P_EXPAND)) Expand(rng);
-
-            //changes the activation funciton of a single node
-            if (rng.RandBool(P_NODE))
-            {              
-                Nuron node = GetRandomNuron(rng);
-                if (node.IsInput) return;
-                node.Func = GetRandomActivation(rng);
-                return;
-            }
-
-            var ittr = axons.ListItems();
-
-            foreach (Axon ax in ittr)
-            {
-                //mutates weights based on the rate of mutation
-                if (!rng.RandBool(rate)) continue;
-
-                if (ax.Enabled)
-                {
-                    //permutes the weight by a small amount
-                    double delta = rng.RandGauss() * SD_SHIFT;
-                    ax.Weight = ax.Weight + delta;
-                }
-                else
-                {
-                    //resets the neuron to a small weight
-                    ax.Weight = rng.RandGauss() * SD_SHIFT;
-                    ax.Enabled = true;
-                }
-            }
-        }
-
-
-        public void Mutate2(VRandom rng, double rate)
-        {
-            //clamps the rate to be between zero and one
-            rate = VMath.Clamp(rate);
-
-            //expands the size of the network at random
-            if (rng.RandBool(P_EXPAND)) Expand(rng);
-
-            var ittr1 = nurons.ListItems();
-
-            foreach (Nuron n in ittr1)
-            {
-                //skips over input nurons
-                if (n.IsInput) continue;
-
-                //mutates nodes based on the augmented mutation rate
-                if (!rng.RandBool(rate * P_NODE)) continue;
-
-                //updates the activation funciton
-                n.Func = GetRandomActivation(rng);
-            }
-
-            var ittr2 = axons.ListItems();
-
-            foreach (Axon ax in ittr2)
-            {
-                //skips over disables axons
-                if (!ax.Enabled) continue;
-
-                //mutates weights based on the rate of mutation
-                if (!rng.RandBool(rate)) continue;
-
-                //permutes the weight by a small amount
-                double delta = rng.RandGauss() * SD_SHIFT;
-                ax.Weight = ax.Weight + delta;
-            }
-        }
-
-        
-
-        public void Mutate3(VRandom rng, double rate)
-        {
-            //clamps the rate to be between zero and one
-            rate = VMath.Clamp(rate);
-
-            if (rng.RandBool(P_EXPAND))
+            if (rng.RandBool(P_EXPAND * rate))
             {
                 //expands the network
                 Expand(rng);
             }
-            else if (rng.RandBool(P_NODE))
-            {
-                //finds a node to mutate
-                Nuron node = GetRandomNuron(rng);
-                int tries = 0;
+            //else if (rng.RandBool(P_NODE * rate))
+            //{
+            //    //finds a node to mutate
+            //    Nuron node = GetRandomNuron(rng);
+            //    int tries = 0;
 
-                //keeps searching if the node is an input node
-                while (node.IsInput && tries < 64)
-                {
-                    node = GetRandomNuron(rng);
-                    tries++;
-                }
+            //    //keeps searching if the node is an input node
+            //    while (node.IsInput && tries < 64)
+            //    {
+            //        node = GetRandomNuron(rng);
+            //        tries++;
+            //    }
 
-                //updates the nodes activation function
-                if (node.IsInput) return;
-                node.Func = GetRandomActivation(rng);
-            }
-            else if (rng.RandBool(P_TOGGEL))
+            //    //updates the nodes activation function
+            //    if (node.IsInput) return;
+            //    node.Func = GetRandomActivation(rng);
+            //}
+            else if (rng.RandBool(P_TOGGEL * rate))
             {
                 Axon ax = GetRandomAxon(rng);
 
@@ -585,27 +483,28 @@ namespace Vulpine.Core.AI.Nural
             }
             else
             {
-                var ittr = axons.ListItems();
+                Axon ax = GetRandomAxon(rng);
 
-                foreach (Axon ax in ittr)
+                if (ax.Enabled)
                 {
-                    //skips over disables axons
-                    if (!ax.Enabled) continue;
-
-                    //mutates weights based on the rate of mutation
-                    if (!rng.RandBool(rate)) continue;
-
                     //permutes the weight by a small amount
                     double delta = rng.RandGauss() * SD_SHIFT;
-                    ax.Weight = ax.Weight + delta;
+                    ax.Weight = ax.Weight + (delta * rate);
+                }
+                else
+                {
+                    //resets the nuron to a small weight
+                    double delta = rng.RandGauss() * SD_SHIFT;
+                    ax.Weight = delta * rate;
+                    ax.Enabled = true;
                 }
             }
 
         }
 
 
-        //This is the One!!!!
-        public void Mutate(VRandom rng, double rate)
+        //This is the (Old) One. It assumes a rate between 0.0 and 1.0
+        public void MutateAlt(VRandom rng, double rate)
         {
             //clamps the rate to be between zero and one
             rate = VMath.Clamp(rate);
@@ -618,17 +517,17 @@ namespace Vulpine.Core.AI.Nural
             var ittr1 = nurons.ListItems();
             var ittr2 = axons.ListItems();
 
-            foreach (Nuron n in ittr1)
-            {
-                //skips over input nurons
-                if (n.IsInput) continue;
+            //foreach (Nuron n in ittr1)
+            //{
+            //    //skips over input nurons
+            //    if (n.IsInput) continue;
 
-                //mutates nodes based on the augmented mutation rate
-                if (!rng.RandBool(P_NODE * rate)) continue;
+            //    //mutates nodes based on the augmented mutation rate
+            //    if (!rng.RandBool(P_NODE * rate)) continue;
 
-                //updates the activation funciton
-                n.Func = GetRandomActivation(rng);
-            }
+            //    //updates the activation funciton
+            //    n.Func = GetRandomActivation(rng);
+            //}
 
             foreach (Axon ax in ittr2)
             {
@@ -671,12 +570,12 @@ namespace Vulpine.Core.AI.Nural
                     nc = new Nuron(this, n);
                     nurons.Add(nc.Index, nc);
                 }
-                else
-                {
-                    //determins the activation based on crossover
-                    bool cross = rng.RandBool();
-                    if (cross) nc.Func = n.Func;
-                }
+                //else
+                //{
+                //    //determins the activation based on crossover
+                //    bool cross = rng.RandBool();
+                //    if (cross) nc.Func = n.Func;
+                //}
             }
 
             foreach (Axon ax in ittr2)
@@ -715,7 +614,7 @@ namespace Vulpine.Core.AI.Nural
         }
 
 
-        public double Compare1(NetworkAuto genome)
+        public double Compare(NetworkAuto genome)
         {
             //used in computing the distance
             int match = 0;
@@ -756,86 +655,11 @@ namespace Vulpine.Core.AI.Nural
 
             //determins the size of the larger network
             int size = Math.Max(this.NumAxons, genome.NumAxons);
-            size = (size > 20) ? size - 20 : 1;
+            //size = (size > 20) ? size - 20 : 1;
 
             //couputes the distance for specisation
             double dist = (C0 * disjoint) / (double)size;
             dist += C1 * (wbar / (double)match);
-
-            return dist;
-        }
-
-
-        public double Compare(NetworkAuto genome)
-        {
-            //used in computing the distance
-            int match = 0;
-            int disjoint = 0;
-            double wbar = 0.0;
-
-            //used in comparing node counts
-            int ndiff = 0;
-            int nmatch = 0;
-
-            //lists the nurons in each of the networks
-            var ittr1 = this.nurons.ListItems();
-
-            foreach (Nuron n1 in ittr1)
-            {
-                //tries to find the matching nuron
-                Nuron n2 = genome.nurons.GetValue(n1.Index);
-                if (n2 == null) continue;
-
-                //counts the nodes that differ in activation
-                if (n2.Func != n1.Func) ndiff += 1;
-                nmatch += 1;
-            }
-
-            //lists the axons in each of the networks
-            var ittr3 = this.axons.ListItems();
-            var ittr4 = genome.axons.ListItems();
-
-            foreach (Axon ax1 in ittr3)
-            {
-                //tries to find the matching axon
-                Axon ax2 = genome.axons.GetValue(ax1.Index);
-
-                if (ax2 == null)
-                {
-                    //counts the disjoint axons
-                    disjoint += 1;
-                }
-                else if (!(ax1.Enabled && ax2.Enabled))
-                {
-                    //considers disabled axons to be disjoint
-                    disjoint += 1;
-                }
-                else
-                {
-                    //computes the distance bteween the weights
-                    double w1 = ax1.Weight;
-                    double w2 = ax2.Weight;
-
-                    wbar += Math.Abs(w1 - w2);
-                    match += 1;
-                }
-            }
-
-            foreach (Axon ax1 in ittr4)
-            {
-                //counts the disjoint edges from the other network
-                bool test = this.axons.HasKey(ax1.Index);
-                if (!test) disjoint += 1;
-            }
-
-            //determins the size of the larger network
-            int size = Math.Max(this.NumAxons, genome.NumAxons);
-            size = (size > 20) ? size - 20 : 1;
-
-            //couputes the distance for specisation
-            double dist = (C0 * ndiff) / (double)nmatch; 
-            dist += (C1 * disjoint) / (double)size;
-            dist += C2 * (wbar / (double)match);
 
             return dist;
         }
@@ -914,8 +738,11 @@ namespace Vulpine.Core.AI.Nural
                 int nid0 = actual.Source;
                 int nid2 = actual.Target;
 
+                //Axon ax1 = new Axon(nid0, nid1, actual.Weight);
+                //Axon ax2 = new Axon(nid1, nid2, temp.Weight);
+
                 Axon ax1 = new Axon(nid0, nid1, actual.Weight);
-                Axon ax2 = new Axon(nid1, nid2, temp.Weight);
+                Axon ax2 = new Axon(nid1, nid2, 1.0);
 
                 //we use the overwitre comand because there may be hash collisions
                 axons.Overwrite(ax1.Index, ax1);

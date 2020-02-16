@@ -25,14 +25,15 @@ namespace ArtEvolverConsole
 
         public const string FILE_OUT = @"S:\Animation\";
 
-        public const int MAX_GEN = 1024;
+        public const int MAX_GEN = 40960;
 
 
         static void Main(string[] args)
         {
-            //RunEvolution2();
+            RunEvolution2();
             //GeneratePictures();
-            TestGennetics4();
+            //RandomMutaitons();
+            //TestGennetics4();
             //SortTest();
 
             Console.WriteLine("Press Any Key To Continue... ");
@@ -117,8 +118,9 @@ namespace ArtEvolverConsole
             Texture txt = new Interpolent(img, Intpol.Nearest);
 
             var fitness = BuildFitness(txt);
-            EvolSpecies<CPPN> evolver = new EvolSpecies<CPPN>(100, 0.1, fitness);
+            EvolSpecies<CPPN> evolver = new EvolSpecies<CPPN>(500, 1.0, fitness); //100, 0.1
             CPPN best = new CPPN();
+            CPPN proto = new CPPN();
             
 
             Renderor ren = new Renderor();
@@ -130,26 +132,33 @@ namespace ArtEvolverConsole
             evolver.Initialise(best);
 
             for (int i = 0; i < MAX_GEN; i++)
-            {               
-                ren.Render(best, output);
+            {
+                Console.WriteLine();
                 string index = i.ToString("0000");
-                output.BMP.Save(FILE_OUT + index + ".png");
+
+                Console.WriteLine("Rendering Best Fit...");
+                ren.Render(best, output);               
+                output.BMP.Save(FILE_OUT + "A" + index + ".png");
+
+                Console.WriteLine("Rendering Random Species...");
+                ren.Render(proto, output);
+                output.BMP.Save(FILE_OUT + "B" + index + ".png");
 
                 int nodes = best.NumNurons;
                 int axons = best.NumAxons;
                 double fit = evolver.TopFitness;
 
-
                 Console.WriteLine();
                 Console.WriteLine("Generation " + i + ": " + nodes + " " + axons + " " + fit);
                 Console.WriteLine("Num Species: " + evolver.NumSpecies);
-                Console.WriteLine("Threshold: " + evolver.Threshold);
+                Console.WriteLine("Threshold: " + evolver.Threshold.ToString("0.00"));
 
-                //we cannot have more species than there are indvidual organisms
-                if (evolver.NumSpecies > 100) throw new Exception();
+                ////we cannot have more species than there are indvidual organisms
+                //if (evolver.NumSpecies > 100) throw new Exception();
 
                 evolver.Evolve();
                 evolver.GetTopSpec(best);
+                evolver.GetRandProto(proto);
             }
         }
 
@@ -182,7 +191,60 @@ namespace ArtEvolverConsole
 
             for (int i = 0; i < MAX_GEN; i++)
             {
-                network.Mutate(rng, 0.05); //0.1
+                network.Mutate(rng, 1.0); //0.1
+
+                ren.Render(network, output);
+                string file = i.ToString("0000") + ".png";
+
+                output.BMP.Save(FILE_OUT + file);
+
+                int nodes = network.NumNurons;
+                int axons = network.NumAxons;
+                double fit = fitness(network);
+
+                //Console.WriteLine();
+                Console.WriteLine("Generation " + i + ": " + nodes + " " + axons + " " + fit);
+            }
+
+        }
+
+
+        public static void RandomMutaitons()
+        {
+            var bmp = new System.Drawing.Bitmap(FILE_IN);
+            ImageSys img = new ImageSys(bmp);
+            Texture txt = new Interpolent(img, Intpol.Nearest);
+            var fitness = BuildFitness(txt);
+
+            CPPN network = new CPPN();
+            VRandom rng = new RandMT();
+
+            network.Randomize(rng);
+
+            Renderor ren = new Renderor();
+            ImageSys output = new ImageSys(256, 256);
+
+            //img.BMP.Save(FILE_OUT + "test.png");
+
+            Console.WriteLine("Building Network...");
+
+            for (int i = 0; i < 200; i++)
+            {
+                network.Mutate(rng, 1.0);
+            }
+
+
+            Console.WriteLine("Aproximating Image: " + FILE_IN);
+
+            
+
+            //NOTE: Make it so we don't accept mutations that
+            //result in NaN fitness!
+
+            for (int i = 0; i < MAX_GEN; i++)
+            {
+                //network.Mutate(rng, 1.0); //0.1
+                network.Randomize(rng);
 
                 ren.Render(network, output);
                 string file = i.ToString("0000") + ".png";
@@ -326,7 +388,7 @@ namespace ArtEvolverConsole
                 return dist;
             };
 
-            EvolSpecies<GenString2> evol = new EvolSpecies<GenString2>(1000, 0.1, fit);
+            EvolSpecies<GenString2> evol = new EvolSpecies<GenString2>(500, 0.1, fit);
             evol.Initialise(best);
 
             for (int i = 0; i < MAX_GEN; i++)
@@ -343,7 +405,21 @@ namespace ArtEvolverConsole
                 Console.WriteLine("Threshold: " + evol.Threshold);
                 Console.WriteLine(best);
 
-                Thread.Sleep(500);
+
+                if (fitness >= 0.996)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("#############################################################");
+                    Console.WriteLine("TARGET FITNESS OF > 0.996 REACHED!!!");
+                    Console.WriteLine("#############################################################");
+                    Console.WriteLine();
+
+                    Console.WriteLine("Press any key...");
+                    Console.ReadKey(true);
+                    break;
+                }
+
+                //Thread.Sleep(500);
             }
         }
 

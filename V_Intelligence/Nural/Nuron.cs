@@ -183,7 +183,7 @@ namespace Vulpine.Core.AI.Nural
         public ActFunc Func
         {
             get { return func; }
-            set { func = value; }
+            //set { func = value; }
         }
 
         /// <summary>

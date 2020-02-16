@@ -5,6 +5,7 @@ using System.Text;
 
 using Vulpine.Core.Calc;
 using Vulpine.Core.Calc.RandGen;
+using Vulpine.Core.Calc.Matrices;
 
 namespace Vulpine.Core.AI.Genetics
 {
@@ -249,27 +250,27 @@ namespace Vulpine.Core.AI.Genetics
             return true;
         }
 
-
-
-        //internal Organism<T> GetMember(int index)
-        //{
-        //    //retreives the organism from the greater populaiton
-        //    return pop.GetMember(index);
-        //}
-
         internal Organism<T> GetRandMember(VRandom rng)
         {
-            int index = rng.RandInt(members.Count);
+            //int index = rng.RandInt(members.Count);
+            //int id = members[index];
+            //return pop.GetMember(id);
+
+            //creates a vector to store the probablity distribution
+            Vector pd = new Vector(members.Count);
+
+            //uses the fitness of each member as the weight
+            for (int i = 0; i < pd.Length; i++)
+            {
+                var mem = pop.GetMember(members[i]);
+                pd[i] = mem.Fitness;
+            }
+
+            //returns a random member based on fitness
+            int index = rng.SampleDesc(pd);
             int id = members[index];
-            return pop.GetMember(id);
-
-            //IDEA: weight the members by their respective fitness
-            //so that more fit members are selected more often
+            return pop.GetMember(id);               
         }
-
-
-
-
 
     }
 }

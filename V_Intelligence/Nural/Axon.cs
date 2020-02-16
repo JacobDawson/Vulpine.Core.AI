@@ -112,8 +112,16 @@ namespace Vulpine.Core.AI.Nural
 
         public double Weight
         {
-            get { return weight; }
-            set { weight = value; }
+            get 
+            {
+                //returns the weight, or zero if disabled
+                return enabled ? weight : 0.0; 
+            }
+            set 
+            { 
+                //simply sets the wieght
+                weight = value; 
+            }
         }
 
         public bool Enabled
