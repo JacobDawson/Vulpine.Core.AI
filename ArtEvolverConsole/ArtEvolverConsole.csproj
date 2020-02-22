@@ -8,7 +8,7 @@
     <ProjectGuid>{D8EEC4F8-7CA7-4F23-88C5-B164E5250872}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ArtEvolver.Console</RootNamespace>
+    <RootNamespace>ArtEvolverConsole</RootNamespace>
     <AssemblyName>ArtEvolverConsole</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
@@ -44,10 +44,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ControlPoints.cs" />
     <Compile Include="GenString2.cs" />
     <Compile Include="GenString.cs" />
+    <Compile Include="NetworkTests\TestAdder.cs" />
+    <Compile Include="NetworkTests\TestXor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SubPixel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\V_DataStruk\V_DataStruk\V_DataStruk.csproj">
@@ -71,6 +75,7 @@
       <Name>V_Intelligence</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

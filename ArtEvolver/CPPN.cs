@@ -44,6 +44,9 @@ namespace ArtEvolver
 
         public Color Sample(double u, double v)
         {
+            //clears the network for each sample
+            network.ResetNetwork();
+
             //computes the distance from the origin
             double dist = (u * u) + (v * v);
             dist = Math.Sqrt(dist);

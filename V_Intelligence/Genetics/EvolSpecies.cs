@@ -51,8 +51,8 @@ namespace Vulpine.Core.AI.Genetics
         private bool crossover = true;
 
         //threshold for inclusion in a species (6.0) (6.86)
-        private double compat_tresh = 2.0;
-        private double compat_mod = 0.1; //0.2
+        private double compat_tresh = 0.5;
+        private double compat_mod = 0.05; //0.2
 
         ////use these settings for evolving genetic strings in test 
         //private double compat_tresh = 400.0;

@@ -491,7 +491,6 @@ namespace Vulpine.Core.AI.Nural.Old
                 NuronOld n3 = RandNuron();
                 n1 = n2;
                 n2 = n3;
-
                 count++;
             }
 

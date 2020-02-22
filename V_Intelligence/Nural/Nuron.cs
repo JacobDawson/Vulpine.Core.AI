@@ -43,6 +43,9 @@ namespace Vulpine.Core.AI.Nural
         //stores the index of the nuron
         private int index;
 
+        //refrences the level where this nuron is located
+        private int level;
+
         //used in propergating the network
         private double value;
         private double vprev;
@@ -60,13 +63,14 @@ namespace Vulpine.Core.AI.Nural
         /// </summary>
         /// <param name="network">Network on wich to create the nuron</param>
         /// <param name="func">Activation funciton of the nuron</param>
-        /// <param name="level">Level of the nuron</param>
         /// <param name="index">Index of the nuron</param>
-        internal Nuron(NetworkAuto network, ActFunc func, int index)
+        /// <param name="level">Level of the nuron</param>
+        internal Nuron(NetworkAuto network, ActFunc func, int index, int level)
         {
             this.network = network;
             this.func = func;
             this.index = index;
+            this.level = level;
 
             this.value = 0.0;
             this.vprev = 0.0;
@@ -77,6 +81,7 @@ namespace Vulpine.Core.AI.Nural
             this.network = network;
             this.func = other.func;
             this.index = other.index;
+            this.level = other.level;
 
             this.value = 0.0;
             this.vprev = 0.0;
@@ -120,9 +125,9 @@ namespace Vulpine.Core.AI.Nural
         /// <returns>The resluts of comparison</returns>
         public int CompareTo(Nuron other)
         {
-            ////sorts the nurons first by assending level
-            //int test = level.CompareTo(other.level);
-            //if (test != 0) return test;
+            //sorts the nurons first by assending level
+            int test = level.CompareTo(other.level);
+            if (test != 0) return test;
 
             //compares the nurons by their index
             return index.CompareTo(other.index);
@@ -141,14 +146,14 @@ namespace Vulpine.Core.AI.Nural
             get { return index; }
         }
 
-        ///// <summary>
-        ///// Indecates the level on which this nuron resides. Forward axons
-        ///// always connect lower levels to higher levels.
-        ///// </summary>
-        //public int Level
-        //{
-        //    get { return level; }
-        //}
+        /// <summary>
+        /// Indecates the level on which this nuron resides. Forward axons
+        /// always connect lower levels to higher levels.
+        /// </summary>
+        public int Level
+        {
+            get { return level; }
+        }
 
         /// <summary>
         /// Determins if the current nuron is an input node.

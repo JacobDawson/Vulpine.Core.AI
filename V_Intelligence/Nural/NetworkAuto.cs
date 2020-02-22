@@ -23,15 +23,15 @@ namespace Vulpine.Core.AI.Nural
         //what is the probablity that the network will expand when mutated
         private const double P_EXPAND = 0.1;
 
-        //what is the probablity that a node will change activation 
-        //functions when the network is mutated
-        private const double P_NODE = 0.2;
-
         //the probability that we toggel an axon during mutation
-        public const double P_TOGGEL = 0.1;
+        public const double P_TOGGEL = 0.2;
 
         //the probablity that we prefrom liniar crossover
         public const double P_Linear = 0.25;
+
+        //inidcates the chance that a network conneciton is
+        //made recurent, assuming recurent connecions are allowed
+        public const double P_Recur = 0.1;
 
         //constants used in comparing networks
         public const double C0 = 2.0;
@@ -39,7 +39,8 @@ namespace Vulpine.Core.AI.Nural
 
         //indicates the maximum number of tries for random probing
         private const int MAX_TRY = 64;
-        private const int MAX_ID = 64000; 
+        private const int MAX_ID = 64000;
+        private const int MAX_LV = 4096;
 
         //stores the nurons and axons in independent tables
         private Table<Int32, Nuron> nurons;
@@ -48,6 +49,9 @@ namespace Vulpine.Core.AI.Nural
         //stores the indicies of the input and output nurons
         private int[] inputs;
         private int[] outputs;
+
+        //indicates if recurent connections are allowed
+        private bool recurent = false;
 
         /// <summary>
         /// Creates a prototype network, with the given number of inputs and
@@ -74,7 +78,7 @@ namespace Vulpine.Core.AI.Nural
             //creates all the input nurons
             for (int i = 0; i < inputs; i++)
             {
-                Nuron n = new Nuron(this, ActFunc.Input, i);
+                Nuron n = new Nuron(this, ActFunc.Input, i, 0);
                 nurons.Add(n.Index, n);
                 this.inputs[i] = n.Index; //i
             }
@@ -82,7 +86,7 @@ namespace Vulpine.Core.AI.Nural
             //creates all the output nurons
             for (int i = 0; i < outputs; i++)
             {
-                Nuron n = new Nuron(this, ActFunc.Sigmoid, MAX_ID - i);
+                Nuron n = new Nuron(this, ActFunc.Sigmoid, MAX_ID - i, MAX_LV);
                 nurons.Add(n.Index, n);
                 this.outputs[i] = n.Index; //MAX_ID - i
             }
@@ -94,6 +98,9 @@ namespace Vulpine.Core.AI.Nural
 
         public NetworkAuto(NetworkAuto other)
         {  
+            //copies the global settings
+            this.recurent = other.recurent;
+
             //obtains the raw statistics of the opposing network
             int ninputs = other.inputs.Length;
             int noutputs = other.outputs.Length;
@@ -264,6 +271,55 @@ namespace Vulpine.Core.AI.Nural
             {
                 nx.Value = 0.0;
                 nx.Prev = 0.0;
+            }
+        }
+
+        /// <summary>
+        /// Removes unused Nurons and Axons from the network, reducing the overall
+        /// size of the network without effecting it's functionality.
+        /// </summary>
+        public void ReduceNetwork()
+        {
+            var ittr1 = axons.ListItems();
+            var trash1 = new Stack<Axon>();
+
+            foreach (Axon ax in ittr1)
+            {
+                if (ax.Enabled) continue;
+                else trash1.Push(ax);
+            }
+
+            while (trash1.Count > 0)
+            {
+                Axon ax = trash1.Pop();
+                axons.Remove(ax.Index);
+            }
+
+            var ittr2 = nurons.ListItems();
+            var trash2 = new Stack<Nuron>();
+
+            foreach (Nuron n in ittr2)
+            {
+                var ittr3 = axons.ListItems();
+                bool clear = false;
+
+                foreach (Axon ax in ittr3)
+                {
+                    if (ax.Source == n.Index || ax.Target == n.Index)
+                    {
+                        clear = true;
+                        break;
+                    }
+                }
+
+                if (clear) continue;
+                else trash2.Push(n);
+            }
+
+            while (trash2.Count > 0)
+            {
+                Nuron n = trash2.Pop();
+                nurons.Remove(n.Index);
             }
         }
 
@@ -443,29 +499,15 @@ namespace Vulpine.Core.AI.Nural
             //makes shure the rate is positive
             rate = Math.Abs(rate);
 
-            if (rng.RandBool(P_EXPAND * rate))
+            double selector = rng.NextDouble();
+
+
+            if (selector < P_EXPAND)
             {
                 //expands the network
                 Expand(rng);
             }
-            //else if (rng.RandBool(P_NODE * rate))
-            //{
-            //    //finds a node to mutate
-            //    Nuron node = GetRandomNuron(rng);
-            //    int tries = 0;
-
-            //    //keeps searching if the node is an input node
-            //    while (node.IsInput && tries < 64)
-            //    {
-            //        node = GetRandomNuron(rng);
-            //        tries++;
-            //    }
-
-            //    //updates the nodes activation function
-            //    if (node.IsInput) return;
-            //    node.Func = GetRandomActivation(rng);
-            //}
-            else if (rng.RandBool(P_TOGGEL * rate))
+            else if (selector < P_TOGGEL)
             {
                 Axon ax = GetRandomAxon(rng);
 
@@ -489,13 +531,13 @@ namespace Vulpine.Core.AI.Nural
                 {
                     //permutes the weight by a small amount
                     double delta = rng.RandGauss() * SD_SHIFT;
-                    ax.Weight = ax.Weight + (delta * rate);
+                    ax.Weight = ax.Weight + delta;
                 }
                 else
                 {
                     //resets the nuron to a small weight
                     double delta = rng.RandGauss() * SD_SHIFT;
-                    ax.Weight = delta * rate;
+                    ax.Weight = delta;
                     ax.Enabled = true;
                 }
             }
@@ -681,36 +723,30 @@ namespace Vulpine.Core.AI.Nural
 
         private void Expand(VRandom rng)
         {
-            //obtains a pair of nurons completly at random
-            Nuron n1 = GetRandomNuron(rng);
-            Nuron n2 = GetRandomNuron(rng);
+            Nuron n1, n2;
 
-            //IMPORTANT: What if n2 is an input nuron, what if both
-            //nurons are input nurons? This should occor about 1/4
-            //of the time with new netorks!!!
+            //generates a pair of random nurons on diffrent levels
+            bool pass = GetRandomPair(rng, out n1, out n2);
+            if (!pass) return;
 
-            if (n2.IsInput)
+            //determins if this should be a recurent conneciton
+            bool testrec = recurent;
+            testrec = testrec && !n1.IsInput;
+            testrec = testrec && rng.RandBool(P_Recur);
+
+            if (testrec)
             {
-                //this is an Ad-Hoc solution to reduce the number of
-                //node-to-input connections, it still won't prevent
-                //input-input connecitons however.
-
-                if (n1.IsInput) return;
-
                 Nuron nx = n1;
                 n1 = n2;
                 n2 = nx;
             }
 
-            //creates a temporary axon between the two objects
+            //creates a temporary axon between the two nurons
             double w = rng.RandGauss() * SD_NEW;
             Axon temp = new Axon(n1.Index, n2.Index, w);
 
             //atempts to gain the actual axon if it exists
             Axon actual = axons.GetValue(temp.Index);
-
-            //NOTE: It is possable to have a node connect to itself
-            //this is not a failing, but a feature of the system
 
             if (actual == null)
             {
@@ -729,9 +765,13 @@ namespace Vulpine.Core.AI.Nural
                 int nid1 = GetRandomIndex(rng);
                 if (nid1 < 0) return;
 
+                //sets the level of the new node in the middle
+                if (Math.Abs(n1.Level - n2.Level) < 3) return;
+                int level = (n1.Level + n2.Level) / 2; 
+
                 //adds a new node to the network
                 ActFunc act = GetRandomActivation(rng);
-                Nuron n3 = new Nuron(this, act, nid1);
+                Nuron n3 = new Nuron(this, act, nid1, level);
                 nurons.Add(n3.Index, n3);
 
                 //inserts two new axons where the old one used to be
@@ -809,6 +849,45 @@ namespace Vulpine.Core.AI.Nural
             }
 
             return index;
+        }
+
+        /// <summary>
+        /// Helper mehtod: Selects a pair of nurons at random from diffrent 
+        /// levels of the network. The nurons are always listed in order. It
+        /// returns false if it was ubale to generate a valid pair.
+        /// </summary>
+        /// <param name="rng">A random number generator</param>
+        /// <param name="n1">The lower level nuron</param>
+        /// <param name="n2">The upper level nuron</param>
+        /// <returns>True if a vaild pair was generated</returns>
+        private bool GetRandomPair(VRandom rng, out Nuron n1, out Nuron n2)
+        {
+            //generates two random nurons
+            n1 = GetRandomNuron(rng);
+            n2 = GetRandomNuron(rng);
+
+            int count = 0;
+            Nuron n3 = null;
+
+            //keeps searching while the nurons are on the same level
+            while (n1.Level == n2.Level && count < MAX_TRY)
+            {
+                n3 = GetRandomNuron(rng);
+                n1 = n2;
+                n2 = n3;
+                count++;
+            }
+
+            //swaps the nurons if they are out of order
+            if (n1.Level > n2.Level)
+            {
+                n3 = n1;
+                n1 = n2;
+                n2 = n3;
+            }
+
+            //indicates if we found a valid pair
+            return (n1.Level != n2.Level);
         }
 
         #endregion /////////////////////////////////////////////////////////////////////////
