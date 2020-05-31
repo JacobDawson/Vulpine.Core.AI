@@ -1,0 +1,50 @@
+﻿
+
+New Thoughts: (Run21)
+
+- My latest run seems to be much more promissing, thought I have yet to see the
+  conclusion as I type this. Atleast it seems to be exploring mroe of the state
+  space, and isn't gettting stuck on a trivial solution.
+  
+- I attribute this to two things: One is my control point based fitness function,
+  which forces the algorythim to pay coloser atention to the more "intresting"
+  parts of the image. 
+  
+- The other beign that I was previously clamping my fitness function two low. This
+  caused many more images to report the same fitness, so the algorythim could not
+  distinguish between them. If you look at my runs of randomly genrated images, you
+  see that most image report minimum fitness.
+
+  [Rand06.txt] [Rand07.txt]
+
+- I also decressed the smiliarty threshold, till I could generate multiple species
+  at the first generation. I think, if the algorythim starts with a more diverse
+  populaiton, it is easyer to maintain that diversity. This in turn allows the program
+  to explore more possable avineues of evolution.
+
+        //threshold for inclusion in a species
+        private double compat_tresh = 0.5;
+        private double compat_mod = 0.05;
+        
+        
+What To Do Next:
+
+- I need to take care of the previous items listed above, and revert back to the old
+  fitness function, so that I can compare the two runs with only the fitness function
+  changing.
+  
+- This should also be an opertnuity for me to implement a slightly faster algorythim,
+  in that I can render the images in a seperate thread, as this should not effect
+  the preformance of the algorythim itself.
+  
+- If my susppissions are correct, then the the change in fitness fuction is the most
+  improtant aspect. In which case, my next goal should be to develop an even better
+  fitness funciton.
+  
+- I have a few ideas for further improvments to the fitness funciton, several involve
+  implementing the SIFT algorythim, which should be doable, as well as the Descrete
+  Forieer Transform (DCT).
+  
+- I still want to generate more random images using the new network, particuarly with
+  recurent connections, as that aspect has changed the most. It's also a good test
+  of the fitness function, to enshure it's working as intended.

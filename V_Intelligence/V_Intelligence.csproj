@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Nural\NetworkDesign.txt" />
+    <Content Include="Nural\ToDo.txt" />
     <Content Include="Nural\TypesOfNetworks.txt" />
   </ItemGroup>
   <ItemGroup />
