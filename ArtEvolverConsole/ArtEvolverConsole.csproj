@@ -48,7 +48,9 @@
     <Compile Include="GenString2.cs" />
     <Compile Include="GenString.cs" />
     <Compile Include="NetworkTests\TestAdder.cs" />
+    <Compile Include="NetworkTests\TestLatchSR.cs" />
     <Compile Include="NetworkTests\TestXor.cs" />
+    <Compile Include="PathMutator.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SubPixel.cs" />

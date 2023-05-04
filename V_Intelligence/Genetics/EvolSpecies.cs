@@ -14,7 +14,7 @@ namespace Vulpine.Core.AI.Genetics
     public class EvolSpecies<T> where T : Genetic<T>
     {
         //Determins how many creatures die in each generation (0.25)
-        public const double DeathRate = 0.8;
+        public const double DeathRate = 0.25; //0.8;
 
         public const double CrossRate = 0.25;
         public const double TransSpecies = 0.02;
@@ -161,6 +161,21 @@ namespace Vulpine.Core.AI.Genetics
             container.Overwrite(proto);
         }
 
+
+        public int GetOldestSpecies()
+        {
+            int oldest = -1;
+
+            foreach (var spec in species)
+            {
+                int age = spec.Age;
+                if (age > oldest) oldest = age;
+            }
+
+            return oldest;
+        }
+
+
         public void Evolve()
         {
             //throw new NotImplementedException();
@@ -223,7 +238,7 @@ namespace Vulpine.Core.AI.Genetics
 
                 trash.Push(spec);
 
-                Console.WriteLine("Species Extention!");
+                //Console.WriteLine("Species Extention!");
             }
 
             while (trash.Count > 0)
@@ -413,8 +428,8 @@ namespace Vulpine.Core.AI.Genetics
                     var myspec = new Species<T>(this, baby);
                     species.Add(myspec);
 
-                    //Console.WriteLine("New Species Created!");
-                    Console.Write("\n New Species Created!");
+                    ////Console.WriteLine("New Species Created!");
+                    //Console.Write("\n New Species Created!");
                 }
             }
         }
@@ -423,6 +438,8 @@ namespace Vulpine.Core.AI.Genetics
         {
             //keep the threshhold stable for first few itterations
             if (generation < 5) return;
+
+            //NOTE: Double Check This!!! Make shure it isen't backwards.
 
             //adjust threshold as needed to reach target
             if (species.Count < species_target) 

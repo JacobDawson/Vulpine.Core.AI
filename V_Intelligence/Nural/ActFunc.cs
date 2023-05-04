@@ -50,6 +50,11 @@ namespace Vulpine.Core.AI.Nural
         Relu, //rectified linear unit
         Abs,
 
+        //Non-Standard
+
+        Max,
+        Min,
+
 
 
 

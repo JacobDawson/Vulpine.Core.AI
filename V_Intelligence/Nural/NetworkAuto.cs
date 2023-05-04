@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using System.IO;
+
 using Vulpine.Core.Data;
 using Vulpine.Core.Data.Tables;
 using Vulpine.Core.Data.Lists;
@@ -21,10 +23,10 @@ namespace Vulpine.Core.AI.Nural
         private const double SD_SHIFT = 0.5;
 
         //what is the probablity that the network will expand when mutated
-        private const double P_EXPAND = 0.1;
+        private const double P_EXPAND = 0.01; //0.1;
 
         //the probability that we toggel an axon during mutation
-        public const double P_TOGGEL = 0.2;
+        public const double P_TOGGEL = P_EXPAND + 0.1; //0.2;
 
         //the probablity that we prefrom liniar crossover
         public const double P_Linear = 0.25;
@@ -61,8 +63,10 @@ namespace Vulpine.Core.AI.Nural
         /// </summary>
         /// <param name="inputs">Number of input nurons</param>
         /// <param name="outputs">Number of output nurons</param>
-        public NetworkAuto(int inputs, int outputs)
+        public NetworkAuto(int inputs, int outputs, bool recurent = false)
         {
+            this.recurent = recurent;
+
             ////initialises the tables for the nurons and axons
             //nurons = new TableOpen<Int32, Nuron>(256);
             //axons = new TableOpen<Int32, Axon>(1024);
@@ -137,6 +141,197 @@ namespace Vulpine.Core.AI.Nural
 
             for (int i = 0; i < outputs.Length; i++)
                 this.outputs[i] = other.outputs[i];
+        }
+
+
+        public NetworkAuto(string file)
+        {
+            StreamReader sr = new StreamReader(file);
+            string line;
+            string[] pram;
+            
+            //skips the first two lines
+            sr.ReadLine();
+            sr.ReadLine();
+
+            //copies the global settings
+            line = sr.ReadLine();
+            this.recurent = Boolean.Parse(line);
+
+            //obtains the raw statistics of the opposing network
+            line = sr.ReadLine();
+            pram = line.Split(',');
+            int ninputs = Int32.Parse(pram[0]);
+            int noutputs = Int32.Parse(pram[1]);
+            int nnurons = Int32.Parse(pram[2]);
+            int naxons = Int32.Parse(pram[3]);
+
+            //makes tables large enough to hold the nurons and axons
+            nurons = new TableSystem<Int32, Nuron>(nnurons);
+            axons = new TableSystem<Int32, Axon>(naxons);
+
+            //dose the same for the inputs and outputs
+            inputs = new int[ninputs];
+            outputs = new int[noutputs];
+
+            ////makes copies of all the nurons in the original network
+            //var ittr1 = other.nurons.ListItems();
+            //foreach (Nuron n in ittr1)
+            //{
+            //    Nuron temp = new Nuron(this, n);
+            //    nurons.Add(temp.Index, temp);
+            //}
+
+            for (int i = 0; i < nnurons; i++)
+            {
+                int funcID, index, level;
+                ActFunc func = ActFunc.SoftPlus;
+
+                line = sr.ReadLine();
+                pram = line.Split(',');
+                funcID = Int32.Parse(pram[0]);
+                index = Int32.Parse(pram[1]);
+                level = Int32.Parse(pram[2]);
+
+                switch (funcID)
+                {
+                    case 0: func = ActFunc.Input; break;
+                    case 1: func = ActFunc.Identity; break;
+                    case 2: func = ActFunc.Sine; break;
+                    case 3: func = ActFunc.Cosine; break;
+                    case 4: func = ActFunc.Gaussian; break;
+                    case 5: func = ActFunc.Sigmoid; break;
+                    case 6: func = ActFunc.SoftPlus; break;
+                    case 7: func = ActFunc.Sinc; break;
+                }
+
+                Nuron temp = new Nuron(this, func, index, level);
+                nurons.Add(temp.Index, temp);
+            }
+
+            ////makes copies of all the axons in the original network 
+            //var ittr2 = other.axons.ListItems();
+            //foreach (Axon ax in ittr2)
+            //{
+            //    Axon temp = new Axon(ax);
+            //    axons.Add(temp.Index, temp);
+            //}
+
+            for (int i = 0; i < naxons; i++)
+            {
+                int source, target;
+                double weight;
+
+                line = sr.ReadLine();
+                pram = line.Split(',');
+                source = Int32.Parse(pram[0]);
+                target = Int32.Parse(pram[1]);
+                weight = Double.Parse(pram[2]);
+                
+                Axon temp = new Axon(source, target, weight);
+                axons.Add(temp.Index, temp);
+            }
+
+            ////copies the input and output indicies
+            //for (int i = 0; i < inputs.Length; i++)
+            //    this.inputs[i] = other.inputs[i];
+
+            //for (int i = 0; i < outputs.Length; i++)
+            //    this.outputs[i] = other.outputs[i];
+
+            for (int i = 0; i < ninputs; i++)
+            {
+                line = sr.ReadLine();
+                this.inputs[i] = Int32.Parse(line);
+            }
+
+            for (int i = 0; i < noutputs; i++)
+            {
+                line = sr.ReadLine();
+                this.outputs[i] = Int32.Parse(line);
+            }
+
+            sr.Close();
+
+        }
+
+        public void WriteToFile(string file)
+        {
+            StreamWriter sw = new StreamWriter(file);
+            sw.WriteLine("FoxieIO Adaptive Nural Network, v1.0.0");
+            sw.WriteLine("-----");
+
+            sw.WriteLine(recurent);
+            sw.WriteLine("{0},{1},{2},{3}", 
+                inputs.Length, 
+                outputs.Length, 
+                nurons.Count, 
+                axons.Count);
+
+
+            //makes copies of all the nurons in the original network
+            var ittr1 = nurons.ListItems();
+            foreach (Nuron n in ittr1)
+            {
+                int funcID, index, level;
+                ActFunc func;
+
+                func = n.Func;
+                index = n.Index;
+                level = n.Level;
+                funcID = 6;
+
+                switch (func)
+                {
+                    case ActFunc.Input: funcID = 0; break;
+                    case ActFunc.Identity: funcID = 1; break;
+                    case ActFunc.Sine: funcID = 2; break;
+                    case ActFunc.Cosine: funcID = 3; break;
+                    case ActFunc.Gaussian: funcID = 4; break;
+                    case ActFunc.Sigmoid: funcID = 5; break;
+                    case ActFunc.SoftPlus: funcID = 6; break;
+                    case ActFunc.Sinc: funcID = 7; break;
+                }
+
+                sw.WriteLine("{0},{1},{2}",
+                    funcID,
+                    index,
+                    level);
+            }
+
+            //makes copies of all the axons in the original network 
+            var ittr2 = axons.ListItems();
+            foreach (Axon ax in ittr2)
+            {
+                int source, target;
+                double weight;
+
+                source = ax.Source;
+                target = ax.Target;
+                weight = ax.Weight;
+
+                if (weight.IsNaN()) weight = 0.0;
+
+                sw.WriteLine("{0},{1},{2:R}",
+                    source,
+                    target,
+                    weight);
+            }
+
+            for (int i = 0; i < inputs.Length; i++)
+            {
+                int index = this.inputs[i];
+                sw.WriteLine(index);
+            }
+
+            for (int i = 0; i < outputs.Length; i++)
+            {
+                int index = this.outputs[i];
+                sw.WriteLine(index);
+            }
+
+            sw.Flush();
+            sw.Close();
         }
 
 
@@ -589,6 +784,9 @@ namespace Vulpine.Core.AI.Nural
             }
         }
 
+        //IDEA: Get Rid of Liniar Crossover, as it is not what NEAT uses
+        //instead use the default form of crossover.
+
         public void Crossover(VRandom rng, NetworkAuto genome)
         {
             //throw new NotImplementedException();
@@ -653,6 +851,36 @@ namespace Vulpine.Core.AI.Nural
                     axc.Enabled = en || rng.RandBool(0.25);
                 }
             }
+        }
+
+
+        public void Lerp(NetworkAuto genome, double amount)
+        {
+            //clip ammount to be in range 0 to 1
+            double x = amount;
+            if (x > 1.0) x = 1.0;
+            if (x < 0.0) x = 0.0;
+
+
+            var ittr = genome.axons.ListItems();
+
+            foreach (Axon ax in ittr)
+            {
+                //obtains the matching axon
+                Axon axc = axons.GetValue(ax.Index);
+
+                //ignores axons not shared in common
+                if (axc == null) continue;
+
+                double w1 = axc.Weight;
+                double w2 = ax.Weight;
+
+                //preforms the linear interpolation
+                axc.Weight = (1.0 - x) * w1 + x * w2;
+            }
+
+            
+            //throw new NotImplementedException();
         }
 
 
@@ -816,7 +1044,7 @@ namespace Vulpine.Core.AI.Nural
         private ActFunc GetRandomActivation(VRandom rng)
         {
             //generates a random nuber to select the fuciton
-            int test = rng.RandInt(6);
+            int test = rng.RandInt(7);
 
             switch (test)
             {
@@ -826,6 +1054,7 @@ namespace Vulpine.Core.AI.Nural
                 case 3: return ActFunc.Gaussian;
                 case 4: return ActFunc.Sigmoid;
                 case 5: return ActFunc.Sinc;
+                case 6: return ActFunc.SoftPlus;
             }
 
             //we should never reach this point

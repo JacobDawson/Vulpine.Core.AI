@@ -374,6 +374,8 @@ namespace Vulpine.Core.AI.Nural
                     value = Math.Tanh(value); break;
                 case ActFunc.Sinc:
                     value = VMath.Sinc(value); break;
+                case ActFunc.SoftPlus:
+                    value = VMath.SoftPlus(value); break;
             }
 
             //prevents propagating NaNs

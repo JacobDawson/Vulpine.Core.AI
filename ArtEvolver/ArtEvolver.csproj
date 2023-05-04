@@ -46,6 +46,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CombineCPPN.cs" />
+    <Compile Include="CombineCPPN2.cs" />
+    <Compile Include="CombineCPPN3.cs" />
+    <Compile Include="CombineCPPN_Multi.cs" />
+    <Compile Include="CombineCPPN_Multi2.cs" />
+    <Compile Include="CombineCPPN_Multi3.cs" />
     <Compile Include="CPPN.cs" />
     <Compile Include="EvolverWindow.cs">
       <SubType>UserControl</SubType>
@@ -60,6 +66,10 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="ImageSys.cs" />
+    <Compile Include="NewStart\ImageCube.cs" />
+    <Compile Include="NewStart\MultiImageNetwork.cs" />
+    <Compile Include="NewStart\MultiImageNetworkTester.cs" />
+    <Compile Include="PathCPPN.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="EvolverWindow.resx">

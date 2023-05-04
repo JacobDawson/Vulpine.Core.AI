@@ -9,6 +9,8 @@ using ArtEvolver;
 
 using ArtEvolverConsole.NetworkTests;
 
+using ArtEvolver.NewStart;
+
 using Vulpine.Core.Draw;
 using Vulpine.Core.Draw.Textures;
 
@@ -32,14 +34,29 @@ namespace ArtEvolverConsole
 
         static void Main(string[] args)
         {
-            RunEvolution2();
+            //RunEvolution2();
             //GeneratePictures();
             //RandomMutaitons();
             //TestGennetics4();
             //SortTest();
 
             //RunTestXor();
-            RunTestAdder();
+            //RunTestAdder();
+            //RunTestAdder2();
+            //RunTestLatchSR();
+
+            //PathMutator.RandomMutaitons4();
+
+
+            //PathMutator.TheBigOne();
+            //PathMutator.AniTest();
+            //PathMutator.AniMultTest();
+            //PathMutator.TheHugeOne();
+            //PathMutator.TheBigOne_Alt();
+
+
+            MultiImageNetworkTester.RunTest01();
+
 
             Console.WriteLine("Press Any Key To Continue... ");
             Console.ReadKey(true);
@@ -161,6 +178,7 @@ namespace ArtEvolverConsole
                 Console.WriteLine("Generation " + i + ": " + nodes + " " + axons + " " + fit);
                 Console.WriteLine("Num Species: " + evolver.NumSpecies);
                 Console.WriteLine("Threshold: " + evolver.Threshold.ToString("0.00"));
+                Console.WriteLine("Max Age: " + evolver.GetOldestSpecies());
 
                 ////we cannot have more species than there are indvidual organisms
                 //if (evolver.NumSpecies > 100) throw new Exception();
@@ -538,6 +556,113 @@ namespace ArtEvolverConsole
                 Console.WriteLine("Generation " + i + ": " + nodes + " " + axons + " " + fx);
                 Console.WriteLine("Num Species: " + evol.NumSpecies);
                 Console.WriteLine("Threshold: " + evol.Threshold.ToString("0.00"));
+
+
+                if (fitness > 0.999)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("#############################################################");
+                    Console.WriteLine("TARGET FITNESS REACHED!!!");
+                    Console.WriteLine("#############################################################");
+                    Console.WriteLine();
+
+                    best.ReduceNetwork();
+                    nodes = best.NumNurons;
+                    axons = best.NumAxons;
+                    fx = fit(best);
+
+                    Console.WriteLine("Final Network: " + nodes + " " + axons + " " + fx);
+
+                    Console.WriteLine("Press any key...");
+                    Console.ReadKey(true);
+                    break;
+                }
+
+                //Thread.Sleep(500);
+            }
+        }
+
+        public static void RunTestAdder2()
+        {
+            TestAdder network = new TestAdder();
+            Fitness<TestAdder> fit = x => x.RunTests();
+            EvolMonogen<TestAdder> evol = new EvolMonogen<TestAdder>(500, 1.0, fit);
+
+            evol.Initialise(network);
+
+            TestAdder best = new TestAdder();
+
+            for (int i = 0; i < MAX_GEN; i++)
+            {
+                evol.Evolve();
+                evol.GetTopSpec(best);
+
+                double fitness = evol.TopFitness;
+                //int species = 0; // evol.NumSpecies;
+
+                int nodes = best.NumNurons;
+                int axons = best.NumAxons;
+                double fx = evol.TopFitness;
+
+                Console.WriteLine();
+                Console.WriteLine("Generation " + i + ": " + nodes + " " + axons + " " + fx);
+                //Console.WriteLine("Num Species: " + evol.NumSpecies);
+                //Console.WriteLine("Threshold: " + evol.Threshold.ToString("0.00"));
+
+
+                if (fitness > 0.999)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("#############################################################");
+                    Console.WriteLine("TARGET FITNESS REACHED!!!");
+                    Console.WriteLine("#############################################################");
+                    Console.WriteLine();
+
+                    best.ReduceNetwork();
+                    nodes = best.NumNurons;
+                    axons = best.NumAxons;
+                    fx = fit(best);
+
+                    Console.WriteLine("Final Network: " + nodes + " " + axons + " " + fx);
+
+                    Console.WriteLine("Press any key...");
+                    Console.ReadKey(true);
+                    break;
+                }
+
+                //Thread.Sleep(500);
+            }
+        }
+
+        public static void RunTestLatchSR()
+        {
+            VRandom rng = new RandMT();
+
+            TestLatchSR network = new TestLatchSR();
+            Fitness<TestLatchSR> fit = x => x.TestNetwork(rng);
+            EvolSpecies<TestLatchSR> evol = new EvolSpecies<TestLatchSR>(500, 1.0, fit);
+
+            evol.Initialise(network);
+
+            TestLatchSR best = new TestLatchSR();
+
+            for (int i = 0; i < MAX_GEN; i++)
+            {
+                evol.Evolve();
+                evol.GetTopSpec(best);
+
+                double fitness = evol.TopFitness;
+                int species = evol.NumSpecies;
+
+                int nodes = best.NumNurons;
+                int axons = best.NumAxons;
+                double fx = evol.TopFitness;
+
+                Console.WriteLine();
+                Console.WriteLine("Generation " + i + ": " + nodes + " " + axons + " " + fx);
+                Console.WriteLine("Num Species: " + evol.NumSpecies);
+                Console.WriteLine("Threshold: " + evol.Threshold.ToString("0.00"));
+                Console.WriteLine("Max Age: " + evol.GetOldestSpecies());
 
 
                 if (fitness > 0.999)
