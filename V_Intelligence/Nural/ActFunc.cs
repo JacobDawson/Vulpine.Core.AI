@@ -41,6 +41,7 @@ namespace Vulpine.Core.AI.Nural
 
         SoftPlus, //rectifier
         Sinc,
+        Swish, // f(x) = x / (1 + e^-x)
 
 
         //Non-Continious

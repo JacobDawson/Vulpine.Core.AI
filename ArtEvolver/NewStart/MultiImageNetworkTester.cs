@@ -35,7 +35,7 @@ namespace ArtEvolver.NewStart
 
         public const string Dir_Format = @"S:\Animation\_Multi\Run_{0:000}";
 
-        public const int START_POINT = 1;
+        public const int START_POINT = 8;
 
         //public const int NUM_MUTATIONS = 50;
 
@@ -50,13 +50,13 @@ namespace ArtEvolver.NewStart
             Renderor ren = new Renderor();
             ImageSys output = new ImageSys(256, 256);
 
-            //NOTE: Need To Verify This!!!
-            files = Directory.GetFiles(Path);
+            ////extracts the full path names for each of the images
+            //string[] full_names = new string[files.Length];
+            //for (int i = 0; i < files.Length; i++)
+            //    full_names[i] = Path + files[i];
 
-            //extracts the full path names for each of the images
-            string[] full_names = new string[files.Length];
-            for (int i = 0; i < files.Length; i++)
-                full_names[i] = Path + files[i];
+            //NOTE: Need To Verify This!!!
+            string[] full_names = Directory.GetFiles(Path);
 
             //creates the Image Cube used for interpolations
             ImageCube imgcube = ImageCube.CreateFromFiles(full_names);
@@ -65,7 +65,7 @@ namespace ArtEvolver.NewStart
             for (int i = START_POINT; i < 1000; i++)
             {
                 //creates a new network with the given image cube
-                MultiImageNetwork network = new MultiImageNetwork(imgcube);
+                MultiImageNetwork2 network = new MultiImageNetwork2(imgcube);
 
                 Console.WriteLine("Building Network {0}:", i);
 

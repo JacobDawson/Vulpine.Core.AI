@@ -53,6 +53,8 @@
     <Compile Include="Nural\AxonComp.cs" />
     <Compile Include="Nural\NetworkAuto.cs" />
     <Compile Include="Nural\NetworkComp.cs" />
+    <Compile Include="Nural\Network.cs" />
+    <Compile Include="Nural\NetworkMeta.cs" />
     <Compile Include="Nural\Nuron.cs" />
     <Compile Include="Nural\NuronComp.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

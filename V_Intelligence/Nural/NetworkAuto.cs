@@ -16,7 +16,7 @@ using Vulpine.Core.Calc.Matrices;
 
 namespace Vulpine.Core.AI.Nural
 {
-    public class NetworkAuto : Genetic<NetworkAuto>
+    public class NetworkAuto : Network<NetworkAuto>
     {
         //the standard deviation for new nodes and shifted nodes
         private const double SD_NEW = 2.0;

@@ -25,7 +25,7 @@ namespace ArtEvolver.NewStart
         private const Intpol PreferdIntpol = Intpol.BiLiniar;
 
 
-        private const int NumTex = 8;
+        private const int NumTex = 16; //8;
         private const int Dim = 4;
 
         private Texture[] textures;

@@ -66,6 +66,7 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="ImageSys.cs" />
+    <Compile Include="NewStart\MultiImageNetwork2.cs" />
     <Compile Include="NewStart\ImageCube.cs" />
     <Compile Include="NewStart\MultiImageNetwork.cs" />
     <Compile Include="NewStart\MultiImageNetworkTester.cs" />

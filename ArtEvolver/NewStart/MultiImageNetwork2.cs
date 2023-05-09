@@ -20,7 +20,7 @@ namespace ArtEvolver.NewStart
     /// This network is designed to sample from multiple images (up to 16) in order to generate
     /// random output. 
     /// </summary>
-    public class MultiImageNetwork : Genetic<MultiImageNetwork>, Texture
+    public class MultiImageNetwork2 : Genetic<MultiImageNetwork2>, Texture
     {
 
         #region Class Definitions...
@@ -46,14 +46,14 @@ namespace ArtEvolver.NewStart
 
         private ImageCube imgcube;
 
-        private NetworkAuto net1;
-        private NetworkAuto net2;
+        private NetworkMeta net1;
+        private NetworkMeta net2;
 
         /// <summary>
         /// Creates a blank Multi-Image Network from a given Image Cube
         /// </summary>
         /// <param name="source">An Image Cube to sample from</param>
-        public MultiImageNetwork(ImageCube source)
+        public MultiImageNetwork2(ImageCube source)
         {
             //simply makes a refrence copy of the source
             imgcube = source;
@@ -61,13 +61,13 @@ namespace ArtEvolver.NewStart
             //NOTE: we should probably try to clone the source, or else make
             //sure that ImageCube is immutable, but this is good enough for now
 
-            //hard codes the structure of the networks
-            net1 = new NetworkAuto(4, 8, false);
-            net2 = new NetworkAuto(6, 3, false);
-
             ////hard codes the structure of the networks
-            //net1 = new NetworkMeta(4, 8, 12);
-            //net2 = new NetworkMeta(6, 3, 12);
+            //net1 = new NetworkMeta(4, 8, false);
+            //net2 = new NetworkMeta(6, 3, false);
+
+            //hard codes the structure of the networks
+            net1 = new NetworkMeta(4, 8, 12);
+            net2 = new NetworkMeta(6, 3, 12);
         }
 
         /// <summary>
@@ -76,20 +76,20 @@ namespace ArtEvolver.NewStart
         /// <param name="source">An Image Cube to sample from</param>
         /// <param name="nf1">File source for the 1st network</param>
         /// <param name="nf2">File source for the 2nd network</param>
-        public MultiImageNetwork(ImageCube source, String nf1, String nf2)
+        public MultiImageNetwork2(ImageCube source, String nf1, String nf2)
         {
             //simply makes a refrence copy of the source
             imgcube = source;
 
-            //reades the networks in from a file
-            net1 = new NetworkAuto(nf1);
-            net2 = new NetworkAuto(nf2);
+            ////reades the networks in from a file
+            //net1 = new NetworkMeta(nf1);
+            //net2 = new NetworkMeta(nf2);
 
             //NOTE: we should probably check that the input networks actualy have the
             //structure that we expect, but we can skip that step for now.
         }
 
-        internal MultiImageNetwork(ImageCube source, NetworkAuto net1, NetworkAuto net2)
+        internal MultiImageNetwork2(ImageCube source, NetworkMeta net1, NetworkMeta net2)
         {          
             this.net1 = net1;
             this.net2 = net2;
@@ -145,11 +145,7 @@ namespace ArtEvolver.NewStart
         /// <returns>A value in the range [-1 .. 1]</returns>
         private double Squash(double x)
         {
-            //NOTE: The network already takes care of squashing the output for us, so
-            //we simply return the value unaltered. If that were not the case, we would
-            //need to handel the squashing here.
-
-            return x;
+            return Math.Tanh(x);
         }
 
         /// <summary>
@@ -272,7 +268,7 @@ namespace ArtEvolver.NewStart
         #region Nessary Interface Implementation...
 
 
-        public void Overwrite(MultiImageNetwork genome)
+        public void Overwrite(MultiImageNetwork2 genome)
         {
             net1.Overwrite(genome.net1);
             net2.Overwrite(genome.net2);
@@ -284,13 +280,13 @@ namespace ArtEvolver.NewStart
             net2.Mutate(rng, rate);
         }
 
-        public void Crossover(VRandom rng, MultiImageNetwork genome)
+        public void Crossover(VRandom rng, MultiImageNetwork2 genome)
         {
             net1.Crossover(rng, genome.net1);
             net2.Crossover(rng, genome.net2);
         }
 
-        public double Compare(MultiImageNetwork genome)
+        public double Compare(MultiImageNetwork2 genome)
         {
             double d1 = net1.Compare(genome.net1);
             double d2 = net2.Compare(genome.net2);
@@ -298,13 +294,13 @@ namespace ArtEvolver.NewStart
             return d1 + d2;
         }
 
-        public void Lerp(MultiImageNetwork genome, double amount)
+        public void Lerp(MultiImageNetwork2 genome, double amount)
         {
             net1.Lerp(genome.net1, amount);
             net2.Lerp(genome.net2, amount);
         }
 
-        public void Lerp(MultiImageNetwork start, MultiImageNetwork target, double amount)
+        public void Lerp(MultiImageNetwork2 start, MultiImageNetwork2 target, double amount)
         {
             //overwrites both networks with the starting configurations
             net1.Overwrite(start.net1);
@@ -321,14 +317,14 @@ namespace ArtEvolver.NewStart
             net2.Randomize(rng);
         }
 
-        public MultiImageNetwork Clone()
+        public MultiImageNetwork2 Clone()
         {
             //NOTE: Should I clone the texture as well???
 
-            NetworkAuto c1 = net1.Clone();
-            NetworkAuto c2 = net2.Clone();
+            NetworkMeta c1 = net1.Clone();
+            NetworkMeta c2 = net2.Clone();
 
-            return new MultiImageNetwork(imgcube, c1, c2);
+            return new MultiImageNetwork2(imgcube, c1, c2);
         }
 
         public void Dispose()
